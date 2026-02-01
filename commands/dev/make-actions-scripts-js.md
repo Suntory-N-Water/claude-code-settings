@@ -34,9 +34,9 @@ import type { context } from '@actions/github';
 import type * as core from '@actions/core';
 import type { getOctokit } from '@actions/github';
 
-export type Context = typeof context;
-export type Core = typeof core;
-export type GitHub = ReturnType<typeof getOctokit>;
+type Context = typeof context;
+type Core = typeof core;
+type GitHub = ReturnType<typeof getOctokit>;
 
 export type ActionOptions = {
   github: GitHub;
@@ -49,19 +49,19 @@ export type ActionOptions = {
 
 ### 3. スクリプトファイルの作成
 
-`.github/scripts/{適切なslug}.cjs`としてスクリプトを作成してください。
+`.github/scripts/{適切なslug}.mjs`としてスクリプトを作成してください。
 
 スクリプトの構造:
 ```javascript
 /**
- * @typedef {import("../types/actions").ActionOptions} ActionOptions
+ * @typedef {import("../types/actions.ts").ActionOptions} ActionOptions
  */
 
 /**
  * スクリプトの説明
  * @param {ActionOptions} options
  */
-module.exports = async ({ github, context, core }) => {
+export default async ({ github, context, core }) => {
   // 実装内容
 };
 ```
@@ -88,11 +88,11 @@ job-name:
     - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
       with:
         script: |
-          const scriptFunction = require('./.github/scripts/{slug}.cjs');
+          const { default: scriptFunction } = await import('./.github/scripts/{slug}.mjs');
           await scriptFunction({ github, context, core });
 ```
 
-**重要**: スクリプトのパスは`./.github/scripts/{slug}.cjs`のようにフルパスで指定する必要があります。
+**重要**: スクリプトのパスは`./.github/scripts/{slug}.mjs`のようにフルパスで指定する必要があります。
 
 ### 5. 確認事項
 
@@ -103,11 +103,8 @@ job-name:
 
 ## 注意事項
 
-- CommonJS形式（`.cjs`）でスクリプトを作成してください
+- ES Modules形式（`.mjs`）でスクリプトを作成してください
 - TypeScriptの型定義をJSDocで参照してください
-- `module.exports`で関数をエクスポートしてください
+- `export default`で関数をエクスポートしてください
 - スクリプトは`async`関数として定義してください
 - エラー時は`core.setFailed()`を使用してください
-
-<!-- ## 実装例の参照
-`gh pr view 58`で実装例を確認すること -->
