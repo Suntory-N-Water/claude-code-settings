@@ -31,7 +31,6 @@ file-history
 .claude.json
 .claude.json.*
 debug/
-settings.json
 !.claude/settings.json
 
 plugins/installed_plugins.json
@@ -43,4 +42,9 @@ plugins/install-counts-cache.json
 stats-cache.json
 
 # Obsidian sync logs
-logs/
+logs/history-last-line
+logs/save-history.log
+paste-cache/
+tasks/
+telemetry/
+cache/
