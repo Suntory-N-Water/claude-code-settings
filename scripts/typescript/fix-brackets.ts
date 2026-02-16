@@ -13,7 +13,7 @@ const fixBracketsHook = defineHook({
   run: async (context) => {
     try {
       // git diffで変更されたファイルのリストを取得
-      const proc = Bun.spawn(['git', 'diff', '--name-only', '--cached'], {
+      const proc = Bun.spawn(['git', 'diff', '--name-only', 'HEAD'], {
         stdout: 'pipe',
         stderr: 'pipe',
       });
