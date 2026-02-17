@@ -12,6 +12,16 @@ const fixBracketsHook = defineHook({
   },
   run: async (context) => {
     try {
+      // リポジトリルートを取得
+      const rootProc = Bun.spawn(['git', 'rev-parse', '--show-toplevel'], {
+        stdout: 'pipe',
+        stderr: 'pipe',
+      });
+      const repoRoot = (await new Response(rootProc.stdout).text()).trim();
+      if ((await rootProc.exited) !== 0 || !repoRoot) {
+        return context.success();
+      }
+
       // git diffで変更されたファイルのリストを取得
       const proc = Bun.spawn(['git', 'diff', '--name-only', 'HEAD'], {
         stdout: 'pipe',
@@ -40,7 +50,7 @@ const fixBracketsHook = defineHook({
       let fixedCount = 0;
 
       for (const file of files) {
-        const filePath = join(process.cwd(), file);
+        const filePath = join(repoRoot, file);
 
         // ファイルが存在しない場合はスキップ
         if (!existsSync(filePath)) {
