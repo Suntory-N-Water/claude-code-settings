@@ -48,3 +48,6 @@ paste-cache/
 tasks/
 telemetry/
 cache/
+
+settings.local.json
+plugins/blocklist.json

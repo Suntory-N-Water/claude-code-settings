@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 保存先ディレクトリ（Obsidian）
-OBSIDIAN_DIR="/Users/n_okuda/dev/sui-articles/claude"
+OBSIDIAN_DIR="$HOME/dev/sui-articles/claude"
 LOG_FILE="$HOME/.claude/logs/save-history.log"
 HISTORY_FILE="$HOME/.claude/history.jsonl"
 STATE_FILE="$HOME/.claude/logs/history-last-line"
@@ -11,8 +11,10 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
 }
 
-# 保存先ディレクトリが存在しない場合は作成
+# 必要なディレクトリを作成
 mkdir -p "$OBSIDIAN_DIR"
+mkdir -p "$(dirname "$LOG_FILE")"
+mkdir -p "$(dirname "$STATE_FILE")"
 
 # 状態ファイルの初期化（初回は現在行数を記録するだけ）
 if [ ! -f "$STATE_FILE" ]; then
