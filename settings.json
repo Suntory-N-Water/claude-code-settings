@@ -6,5 +6,6 @@
     "type": "command",
     "command": "node ~/.claude/scripts/statusline.js"
   },
+  "language": "日本語",
   "skipDangerousModePermissionPrompt": true
 }
