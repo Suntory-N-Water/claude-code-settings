@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bun run --silent
-import { defineHook, runHook } from 'cc-hooks-ts';
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { defineHook, runHook } from 'cc-hooks-ts';
 import type { TranscriptEntry } from './types/claude-output.js';
 
 // 型定義

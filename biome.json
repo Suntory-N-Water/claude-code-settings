@@ -7,13 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": [
-      "scripts/**/*.{js,jsx,ts,tsx}",
-      "**/*.json",
-      "!node_modules",
-      "!!**/dist",
-      "!!**/.next"
-    ]
+    "includes": ["scripts/**/*.{js,jsx,ts,tsx}", "**/*.json", "!node_modules"]
   },
   "formatter": {
     "enabled": true,

@@ -53,3 +53,16 @@ settings.local.json
 plugins/blocklist.json
 sessions/
 skills/
+
+logs/history-sync-stderr.log
+logs/history-sync-stdout.log
+logs/launchd-stderr.log
+logs/launchd-stdout.log
+claude-usage-cache.json
+
+.last-cleanup
+daemon.log
+mcp-needs-auth-cache.json
+
+jobs/
+daemon/

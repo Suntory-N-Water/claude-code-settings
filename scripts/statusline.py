@@ -44,11 +44,11 @@ def format_reset(epoch_str, is_7d=False):
         return ""
     try:
         dt = datetime.datetime.fromtimestamp(int(epoch_str), tz=JST)
-        hour = dt.strftime("%I%p").lstrip("0").lower()  # e.g. "3pm"
+        time_str = dt.strftime("%I:%M%p").lstrip("0").lower()  # e.g. "3:05pm"
         if is_7d:
-            label = f"{dt.strftime('%b').capitalize()} {dt.day} at {hour}"
+            label = f"{dt.strftime('%b').capitalize()} {dt.day} at {time_str}"
         else:
-            label = hour
+            label = time_str
         return f"  {DIM}Resets {label} (JST){R}"
     except Exception:
         return ""
@@ -167,7 +167,7 @@ def get_usage():
 # ---- Build output ----
 
 model = data.get("model", {}).get("display_name", "Claude")
-parts = [model]
+line1_parts = [model]
 
 cwd = data.get("workspace", {}).get("current_dir") or data.get("cwd", ".")
 try:
@@ -177,13 +177,15 @@ try:
         text=True,
     ).strip()
     if branch:
-        parts.append(f"\033[38;2;100;180;255m{branch}{R}")
+        line1_parts.append(f"\033[38;2;100;180;255m{branch}{R}")
 except Exception:
     pass
 
 ctx = data.get("context_window", {}).get("used_percentage")
 if ctx is not None:
-    parts.append(fmt("ctx", ctx))
+    line1_parts.append(fmt("ctx", ctx))
+
+line2_parts = []
 
 usage = get_usage()
 five_reset = (usage or {}).get("five_hour_reset")
@@ -191,10 +193,14 @@ seven_reset = (usage or {}).get("seven_day_reset")
 
 five = data.get("rate_limits", {}).get("five_hour", {}).get("used_percentage")
 if five is not None:
-    parts.append(fmt("5h", five, five_reset))
+    line2_parts.append(fmt("5h", five, five_reset))
 
 week = data.get("rate_limits", {}).get("seven_day", {}).get("used_percentage")
 if week is not None:
-    parts.append(fmt("7d", week, seven_reset, is_7d=True))
+    line2_parts.append(fmt("7d", week, seven_reset, is_7d=True))
 
-print(f"{DIM}│{R}".join(f" {p} " for p in parts), end="")
+out = f"{DIM}│{R}".join(f" {p} " for p in line1_parts)
+if line2_parts:
+    out += "\n" + f"{DIM}│{R}".join(f" {p} " for p in line2_parts)
+
+print(out, end="")
