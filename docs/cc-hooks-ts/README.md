@@ -1,7 +1,5 @@
 # cc-hooks-ts
 
-url : https://github.com/sushichan044/cc-hooks-ts
-
 Define Claude Code hooks with full type safety using TypeScript.
 
 See [examples](./examples) for more usage examples.
@@ -22,6 +20,8 @@ See [examples](./examples) for more usage examples.
   - [Documentation](#documentation)
   - [Development](#development)
     - [How to follow the upstream changes](#how-to-follow-the-upstream-changes)
+      - [If a Dependabot PR already exists](#if-a-dependabot-pr-already-exists)
+      - [If no Dependabot PR exists](#if-no-dependabot-pr-exists)
   - [License](#license)
   - [Contributing](#contributing)
 
@@ -61,15 +61,15 @@ import { defineHook } from "cc-hooks-ts";
 const hook = defineHook({
   // Specify the event(s) that trigger this hook.
   trigger: {
-    SessionStart: true
+    SessionStart: true,
   },
   // Implement what you want to do.
   run: (context) => {
     // Do something great here
     return context.success({
-      messageForUser: "Welcome to your coding session!"
+      messageForUser: "Welcome to your coding session!",
     });
-  }
+  },
 });
 
 // import.meta.main is available in Node.js 24.2+ and Bun and Deno
@@ -102,7 +102,7 @@ Then, load defined hooks in your Claude Code settings at `~/.claude/settings.jso
 
 ## Tool Specific Hooks
 
-In `PreToolUse`, `PostToolUse`, and `PostToolUseFailure` events, you can define hooks specific to tools by specifying tool names in the trigger configuration.
+In `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, and `PermissionDenied` events, you can define hooks specific to tools by specifying tool names in the trigger configuration.
 
 For example, you can create a hook that only runs before the `Read` tool is used:
 
@@ -113,12 +113,12 @@ const preReadHook = defineHook({
     // context.input.tool_input is typed as { file_path: string; limit?: number; offset?: number; }
     const { file_path } = context.input.tool_input;
 
-    if (file_path.includes('.env')) {
-      return context.blockingError('Cannot read environment files');
+    if (file_path.includes(".env")) {
+      return context.blockingError("Cannot read environment files");
     }
 
     return context.success();
-  }
+  },
 });
 
 if (import.meta.main) {
@@ -145,6 +145,24 @@ Then configure it in Claude Code settings:
     ]
   }
 }
+```
+
+The same trigger shape also works for permission hooks:
+
+```typescript
+const permissionRequestHook = defineHook({
+  trigger: { PermissionRequest: { Bash: true } },
+  run: (context) => {
+    // context.input.tool_input is typed as BashInput
+    const { command } = context.input.tool_input;
+
+    if (command.includes("rm -rf")) {
+      return context.blockingError("Refusing destructive command");
+    }
+
+    return context.success();
+  },
+});
 ```
 
 ### Custom Tool Types Support
@@ -176,11 +194,11 @@ const deepWikiHook = defineHook({
     const { question, repoName } = context.input.tool_input;
 
     if (question.length > 500) {
-      return context.blockingError('Question is too long');
+      return context.blockingError("Question is too long");
     }
 
     return context.success();
-  }
+  },
 });
 ```
 
@@ -196,14 +214,14 @@ import { defineHook } from "cc-hooks-ts";
 
 const hook = defineHook({
   trigger: {
-    Notification: true
+    Notification: true,
   },
   // Only run this hook on macOS
   shouldRun: () => process.platform === "darwin",
   run: (context) => {
     // Some macOS-specific logic like sending a notification using AppleScript
-    return context.success()
-  }
+    return context.success();
+  },
 });
 ```
 
@@ -243,14 +261,14 @@ const hook = defineHook({
         return {
           event: "PostToolUse",
           output: {
-            systemMessage: "Read tool used successfully after async processing!"
-          }
+            systemMessage: "Read tool used successfully after async processing!",
+          },
         };
       },
       {
-        timeoutMs: 5000 // Optional timeout for the async operation.
-      }
-    )
+        timeoutMs: 5000, // Optional timeout for the async operation.
+      },
+    ),
 });
 ```
 
@@ -279,19 +297,13 @@ pnpm typecheck
 
 ### How to follow the upstream changes
 
-1. Install the latest version of `@anthropic-ai/claude-agent-sdk` and run `pnpm run check`.
-   - If the command passes without errors, there are no type changes.
+Dependabot automatically creates PRs to bump `@anthropic-ai/claude-agent-sdk`. The CI bot posts a type diff comment on each PR.
 
-2. Get diff of the types. This example gets the diff between Claude Code 2.0.69 and 2.0.70:
+#### If a Dependabot PR already exists
 
-   ```bash
-   npm diff --diff=@anthropic-ai/claude-agent-sdk@0.1.69 --diff=@anthropic-ai/claude-agent-sdk@0.1.70 '**/*.d.ts'
+1. Find the Dependabot PR that bumps `@anthropic-ai/claude-agent-sdk` and check out its branch.
 
-   # Only for humans, You can use dandavison/delta for better diff visualization
-   npm diff --diff=@anthropic-ai/claude-agent-sdk@0.1.69 --diff=@anthropic-ai/claude-agent-sdk@0.1.70 '**/*.d.ts' | delta --side-by-side
-   ```
-
-3. Reflect the changes.
+2. Read the type diff posted as a PR comment, then reflect the changes.
    - Edit `src/hooks/` for changed hook input / output types.
      - No need for adding tests in most cases since we are testing the whole type definitions in these files:
        - `src/hooks/input/schemas.test-d.ts`
@@ -299,6 +311,38 @@ pnpm typecheck
        - `src/hooks/event.test-d.ts`
        - `src/hooks/permission.test-d.ts`
    - Edit `src/index.ts` for changed tool input / output types.
+   - YOU SHOULD NOT MODIFY `version` in `package.json` manually.
+
+3. Push to the Dependabot PR branch.
+
+4. Update the PR title to:
+
+   ```plaintext
+   fix: update to parity with Claude Code v$(npm info @anthropic-ai/claude-agent-sdk claudeCodeVersion)
+   ```
+
+#### If no Dependabot PR exists
+
+1. Create a new branch and bump `@anthropic-ai/claude-agent-sdk` to the latest version:
+
+   ```bash
+   git switch -c bump-claude-agent-sdk
+   pnpm add @anthropic-ai/claude-agent-sdk@latest
+   ```
+
+2. Get the type diff between the old and new versions:
+
+   ```bash
+   npm diff --diff=@anthropic-ai/claude-agent-sdk@<old_version> --diff=@anthropic-ai/claude-agent-sdk@<new_version> '**/*.d.ts'
+   ```
+
+3. Reflect the changes (same as step 2 above).
+
+4. Commit, push, and create a PR with the title:
+
+   ```plaintext
+   fix: update to parity with Claude Code v$(npm info @anthropic-ai/claude-agent-sdk claudeCodeVersion)
+   ```
 
 ## License
 

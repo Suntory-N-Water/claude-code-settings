@@ -25,6 +25,8 @@
     "@mizchi/readability": "^0.7.7",
     "cc-hooks-ts": "^2.1.176",
     "github-reserved-names": "^2.2.0",
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-to-string": "^4.0.0",
     "pathe": "^2.0.3",
     "playwright": "^1.61.0",
     "valibot": "^1.4.1"

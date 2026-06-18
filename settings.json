@@ -4,8 +4,26 @@
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
     "CLAUDE_CODE_NEW_INIT": "1",
-    "CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL": "1"
+    "CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL": "1",
+    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
   },
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "model": "claude-opus-4-6",
+  "skillOverrides": {
+    "claude-api": "off",
+    "deep-research": "off",
+    "schedule": "off",
+    "run": "off",
+    "loop": "off",
+    "verify": "off",
+    "keybindings-help": "off",
+    "fewer-permission-prompts": "off",
+    "init": "off"
+  },
+  "disableWorkflows": true,
   "statusLine": {
     "type": "command",
     "command": "~/.claude/scripts/statusline.py"
@@ -24,13 +42,30 @@
   "awaySummaryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "remoteControlAtStartup": false,
-  "autoMode": {
-    "environment": [
-      "$defaults"
-    ]
-  },
   "skipAutoPermissionPrompt": true,
-  "permissions": {
-    "defaultMode": "auto"
+  "autoMode": {
+    "environment": ["$defaults"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/create-plan-link.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "EnterPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/plan-mode-style.ts"
+          }
+        ]
+      }
+    ]
   }
 }

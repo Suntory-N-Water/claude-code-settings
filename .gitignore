@@ -52,7 +52,6 @@ cache/
 settings.local.json
 plugins/blocklist.json
 sessions/
-skills/
 
 logs/history-sync-stderr.log
 logs/history-sync-stdout.log
@@ -66,3 +65,6 @@ mcp-needs-auth-cache.json
 
 jobs/
 daemon/
+plugin-catalog-cache.json
+.last-update-result.json
+.claude/plan-links/
