@@ -31,13 +31,11 @@ file-history
 .claude.json
 .claude.json.*
 debug/
-!.claude/settings.json
 
 plugins/installed_plugins.json
 plugins/known_marketplaces.json
 session-env/
 var
-plans/
 plugins/install-counts-cache.json
 stats-cache.json
 
@@ -67,4 +65,5 @@ jobs/
 daemon/
 plugin-catalog-cache.json
 .last-update-result.json
-.claude/plan-links/
+.last_inuse_sweep
+tool-failure-log/
