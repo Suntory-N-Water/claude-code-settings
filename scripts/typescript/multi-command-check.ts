@@ -113,8 +113,13 @@ function formatErrorMessage(results: CommandResult[]): string | undefined {
       // 個別の結果を返却させるようにする
       // 元のコード: const output = f.stderr || f.stdout || 'No output captured';
       const outputs = [f.stdout, f.stderr].filter(Boolean);
-      const output =
+      const rawOutput =
         outputs.length > 0 ? outputs.join('\n') : 'No output captured';
+      const MAX_OUTPUT_LENGTH = 500;
+      const output =
+        rawOutput.length > MAX_OUTPUT_LENGTH
+          ? `${rawOutput.slice(0, MAX_OUTPUT_LENGTH)}\n... (truncated, ${rawOutput.length - MAX_OUTPUT_LENGTH} more chars)`
+          : rawOutput;
       return `\x1b[31m❌ Command failed: bun run ${f.command}\x1b[0m\n${output}`;
     })
     .join('\n\n');
