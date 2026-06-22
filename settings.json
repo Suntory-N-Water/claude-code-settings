@@ -1,5 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "cleanupPeriodDays": 999,
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
@@ -23,29 +24,6 @@
     "fewer-permission-prompts": "off",
     "init": "off"
   },
-  "disableWorkflows": true,
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/scripts/statusline.py"
-  },
-  "enabledPlugins": {},
-  "extraKnownMarketplaces": {
-    "suntory-n-water-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "Suntory-N-Water/suntory-n-water-marketplace"
-      }
-    }
-  },
-  "language": "日本語",
-  "effortLevel": "medium",
-  "awaySummaryEnabled": false,
-  "skipDangerousModePermissionPrompt": true,
-  "remoteControlAtStartup": false,
-  "skipAutoPermissionPrompt": true,
-  "autoMode": {
-    "environment": ["$defaults"]
-  },
   "hooks": {
     "PostToolUse": [
       {
@@ -66,6 +44,65 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "Explore|general-purpose",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/subagent-archive.ts"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/tool-failure-log.ts"
+          }
+        ]
+      }
+    ]
+  },
+  "disableWorkflows": true,
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/scripts/statusline.py"
+  },
+  "enabledPlugins": {},
+  "extraKnownMarketplaces": {
+    "suntory-n-water-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "Suntory-N-Water/suntory-n-water-marketplace"
+      }
+    }
+  },
+  "language": "日本語",
+  "effortLevel": "high",
+  "awaySummaryEnabled": false,
+  "showThinkingSummaries": true,
+  "skipDangerousModePermissionPrompt": true,
+  "autoCompactEnabled": true,
+  "remoteControlAtStartup": false,
+  "skipAutoPermissionPrompt": true,
+  "autoMode": {
+    "environment": [
+      "$defaults"
     ]
   }
 }
