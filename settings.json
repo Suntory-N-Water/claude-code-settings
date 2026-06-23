@@ -7,7 +7,13 @@
     "CLAUDE_CODE_NEW_INIT": "1",
     "CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL": "1",
     "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
-    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_LOG_TOOL_DETAILS": "1",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_METRICS_INCLUDE_VERSION": "true",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json"
   },
   "permissions": {
     "defaultMode": "auto"
@@ -93,7 +99,6 @@
     "type": "command",
     "command": "~/.claude/scripts/statusline.py"
   },
-  "enabledPlugins": {},
   "extraKnownMarketplaces": {
     "suntory-n-water-marketplace": {
       "source": {
