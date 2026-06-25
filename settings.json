@@ -9,11 +9,8 @@
     "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
     "ENABLE_CLAUDEAI_MCP_SERVERS": "false",
     "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
-    "OTEL_LOG_TOOL_DETAILS": "1",
-    "OTEL_LOGS_EXPORTER": "otlp",
-    "OTEL_METRICS_EXPORTER": "otlp",
-    "OTEL_METRICS_INCLUDE_VERSION": "true",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json"
+    "CLAUDE_CODE_ARTIFACT_AUTO_OPEN": "0",
+    "CLAUDE_CODE_DISABLE_ARTIFACT": "1"
   },
   "permissions": {
     "defaultMode": "auto"
@@ -27,7 +24,8 @@
     "verify": "off",
     "keybindings-help": "off",
     "fewer-permission-prompts": "off",
-    "init": "off"
+    "init": "off",
+    "claude-in-chrome" : "off"
   },
   "hooks": {
     "SessionStart": [
@@ -110,7 +108,8 @@
   "language": "日本語",
   "effortLevel": "high",
   "awaySummaryEnabled": false,
-  "showThinkingSummaries": true,
+  "showClearContextOnPlanAccept": true,
+  "plansDirectory": ".claude/plans",
   "skipDangerousModePermissionPrompt": true,
   "autoCompactEnabled": true,
   "remoteControlAtStartup": false,
@@ -119,5 +118,7 @@
     "environment": [
       "$defaults"
     ]
-  }
+  },
+  "spinnerTipsEnabled" : false,
+  "useAutoModeDuringPlan": true
 }
