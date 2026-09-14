@@ -151,6 +151,15 @@
         ]
       },
       {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-pre-tool-use.ts"
+          }
+        ]
+      },
+      {
         "matcher": "AskUserQuestion",
         "hooks": [
           {
