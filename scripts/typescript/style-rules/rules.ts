@@ -33,7 +33,7 @@ export const wordRules = [
     id: 'empty-adjective-emphasis',
     category: '空虚な形容',
     severity: 'severe',
-    pattern: /核心的|鍵となる|根本的な/u,
+    pattern: /核心的?|鍵となる|根本的な/u,
     good: '何が無いと何ができなくなるかを書く。例:「型定義が無いと tool_input の形が決まらない」',
   },
   {
@@ -453,6 +453,109 @@ export const wordRules = [
     pattern:
       /(?<!(?:肩|背中|背|頭|尻|手|膝|顔|扉|ドア|戸|窓|机|壁|床|地面|太鼓|鍵盤|キーボード|門)[をがも] ?)叩(?:く|き(?![台上売])|け[るばよ]?|い[てた]|こう|か)/u,
     good: '実行・送信のどちらをするかをそのまま書く。例:「clasp push を実行する」「API にリクエストを送る」。物を打つ意味と「叩き台」は残してよい',
+  },
+  // 本人の使用がある語(実測・切り分け・瞬間・断定・既定)は入れていない。
+  // 出典 https://nyosegawa.com/posts/qiita-writing-before-after-ai/
+  {
+    id: 'jargon-pass-through',
+    category: '失敗の比喩',
+    severity: 'warning',
+    pattern: /素通り/u,
+    good: '何が処理されないかをそのまま書く。例:「この分岐は検査せずに次へ渡す」「フィルタが適用されない」',
+  },
+  {
+    id: 'jargon-magnitude',
+    category: '判断の言い回し',
+    severity: 'warning',
+    pattern: /桁違い/u,
+    good: '何倍かを数値で書く。例:「処理時間が 30 倍になる」「件数が 2 桁多い」',
+  },
+  {
+    id: 'jargon-mixup',
+    category: '判断の言い回し',
+    severity: 'warning',
+    pattern: /取り違え/u,
+    good: '何と何を混同するかを書く。例:「id と index を逆に渡す」',
+  },
+  {
+    id: 'jargon-standard-move',
+    category: '判断の言い回し',
+    severity: 'warning',
+    pattern: /定石/u,
+    good: 'なぜその方法を選ぶかを書く。例:「この件数なら index を張る」',
+  },
+  {
+    id: 'jargon-composition',
+    category: '場所や物のたとえ',
+    severity: 'warning',
+    pattern: /という構図/u,
+    good: '関係をそのまま書く。例:「A が B を呼び、失敗すると C が再試行する」',
+  },
+  {
+    id: 'jargon-tool',
+    category: '場所や物のたとえ',
+    severity: 'warning',
+    pattern: /(?:ための|という)道具/u,
+    good: '何ができるかをそのまま書く。例:「差分を出すコマンド」。実物の工具は残してよい',
+  },
+  {
+    // 建物の入口と分けるため、比喩でしか付かない助詞まで含めて見る
+    id: 'jargon-entrance',
+    category: '場所や物のたとえ',
+    severity: 'warning',
+    pattern: /入口(?:として|に立|になる)/u,
+    good: '最初に何をするかをそのまま書く。例:「最初に読むのはこのファイル」。建物の入口は残してよい',
+  },
+  {
+    // silently break / silently ignored の直訳
+    id: 'jargon-silently',
+    category: '翻訳調の言い回し',
+    severity: 'warning',
+    pattern: /静かに(?:壊れ|失敗|死ぬ|落ちる|止ま|消え|無視)/u,
+    good: 'エラーが出ないことをそのまま書く。例:「例外を投げずに空配列を返す」「警告も出さずに設定を捨てる」',
+  },
+  {
+    id: 'jargon-accident',
+    category: '失敗の比喩',
+    severity: 'warning',
+    pattern: /(?<!交通|人身|自動車|追突|接触|労災)事故(?![死車現])/u,
+    good: '何が起きるかをそのまま書く。例:「本番のデータを上書きする」。実際の事故は残してよい',
+  },
+  {
+    id: 'jargon-collapse',
+    category: '失敗の比喩',
+    severity: 'warning',
+    pattern: /(?<!財政|経営|家庭|婚姻|債務)破綻/u,
+    good: '何が成り立たなくなるかを書く。例:「件数が合わなくなる」「型が合わずビルドが落ちる」。経営や財政の破綻は残してよい',
+  },
+  {
+    id: 'jargon-tilt',
+    category: '作業の比喩',
+    severity: 'warning',
+    pattern: /(?:側|安全|厳しめ|緩め|こちら|そちら|どちら)に倒[すしせそさ]/u,
+    good: 'どちらを選ぶかをそのまま書く。例:「迷ったら再試行しない方を選ぶ」',
+  },
+  {
+    id: 'jargon-let-escape',
+    category: '作業の比喩',
+    severity: 'warning',
+    pattern: /(?<!(?:熱|水|空気|蒸気|圧|魚|鳥|虫|煙) ?[をが] ?)逃が[すしせそ]/u,
+    good: '例外や負荷をどう扱うかをそのまま書く。例:「例外を握りつぶさず呼び出し元へ投げる」。熱や水を実際に逃がす意味は残してよい',
+  },
+  {
+    id: 'jargon-crush',
+    category: '作業の比喩',
+    severity: 'warning',
+    pattern: /(?<!(?:時間|暇|ひま|顔|面目|芽) ?[をが] ?)潰[すしせさそ]/u,
+    good: '何を直すかをそのまま書く。例:「未処理の不具合を 1 件ずつ直す」。時間や暇を潰す意味は残してよい',
+  },
+  {
+    // 境界値分析は試験の用語、境界面は jargon-surface が見るため後読みで外す
+    id: 'jargon-boundary',
+    category: '翻訳調の言い回し',
+    severity: 'warning',
+    pattern: /(?:の|という)境界(?![値線面])/u,
+    good: 'どこで分かれるかをそのまま書く。例:「ここから先はライブラリの責務」「この関数は検証をしない」',
   },
 ] as const satisfies readonly WordRule[];
 

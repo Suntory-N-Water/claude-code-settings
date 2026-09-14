@@ -82,6 +82,23 @@ const hitCases = {
   'jargon-pitfall': ['この設定には落とし穴がある。', '落とし穴'],
   'jargon-block-off': ['これで両方の不具合を塞ぐ。', '塞ぐ'],
   'jargon-hit': ['Bash からコマンドを叩くしかない。', '叩く'],
+  'jargon-pass-through': ['この検査を素通りして保存される。', '素通り'],
+  'jargon-magnitude': ['この方式は桁違いに速い。', '桁違い'],
+  'jargon-mixup': ['引数を取り違えると別の行を消す。', '取り違え'],
+  'jargon-standard-move': ['ここは index を張るのが定石である。', '定石'],
+  'jargon-composition': [
+    '呼び出し元が握りつぶすという構図になる。',
+    'という構図',
+  ],
+  'jargon-tool': ['差分を確かめるための道具である。', 'ための道具'],
+  'jargon-entrance': ['この関数が処理の入口として置かれている。', '入口として'],
+  'jargon-silently': ['設定が合わないと静かに壊れる。', '静かに壊れ'],
+  'jargon-accident': ['本番データを消す事故が起きる。', '事故'],
+  'jargon-collapse': ['件数が増えるとこの前提が破綻する。', '破綻'],
+  'jargon-tilt': ['迷ったら再試行しない側に倒す。', '側に倒す'],
+  'jargon-let-escape': ['例外を上位へ逃がす。', '逃がす'],
+  'jargon-crush': ['残った不具合を 1 件ずつ潰す。', '潰す'],
+  'jargon-boundary': ['ここが責務の境界になる。', 'の境界'],
 } as const satisfies Record<WordRuleId, readonly [string, string]>;
 
 const hitRows: [string, string, string][] = Object.entries(hitCases).map(
@@ -156,6 +173,17 @@ const missCases: [WordRuleId, string][] = [
   ['katakana-jargon', 'ナレッジ共有の場を作る。'],
   ['cliche-closing', '結局のところ書きたい人が書く。'],
   ['translationese-verb', '浮き輪が水面に浮かび上がる。'],
+  ['jargon-accident', '交通事故の件数を調べる。'],
+  ['jargon-accident', '事故現場を撮影する。'],
+  ['jargon-collapse', '財政破綻した自治体を調べる。'],
+  ['jargon-tilt', '本棚を手前に倒す。'],
+  ['jargon-let-escape', '熱を逃がす穴を開ける。'],
+  ['jargon-crush', '待ち時間を潰す。'],
+  ['jargon-crush', '面目を潰す結果になった。'],
+  ['jargon-boundary', 'テストの境界値を洗い出す。'],
+  ['jargon-boundary', '土地の境界線を確かめる。'],
+  ['jargon-entrance', '建物の入口で待つ。'],
+  ['jargon-tool', '工具箱から道具を取り出す。'],
 ];
 
 describe('語のルール', () => {
