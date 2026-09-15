@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { applyEdit, introducedFindings } from './textlint-pre-tool-use.ts';
+import { applyEdit, introducedFindings } from './textlint-post-tool-use.ts';
 
-const SCRIPT = join(import.meta.dir, 'textlint-pre-tool-use.ts');
-const SESSION_ID = 'textlint-pre-tool-use-test';
+const SCRIPT = join(import.meta.dir, 'textlint-post-tool-use.ts');
+const SESSION_ID = 'textlint-post-tool-use-test';
 
 let workspace: string;
 
 beforeEach(async () => {
-  workspace = await mkdtemp(join(import.meta.dir, '.textlint-pre-use-'));
+  workspace = await mkdtemp(join(import.meta.dir, '.textlint-post-use-'));
 });
 
 afterEach(async () => {
@@ -29,60 +29,71 @@ async function runHook(input: unknown): Promise<{
   return { exitCode: await proc.exited, stdout };
 }
 
-function preToolInput(
+function postToolInput(
   toolName: 'Write' | 'Edit',
   filePath: string,
   toolInput: Record<string, string | boolean>,
 ) {
   return {
-    hook_event_name: 'PreToolUse',
+    hook_event_name: 'PostToolUse',
     session_id: SESSION_ID,
     transcript_path: join(workspace, 'transcript.jsonl'),
     cwd: workspace,
     tool_name: toolName,
     tool_use_id: 'toolu_textlint_test',
     tool_input: { file_path: filePath, ...toolInput },
+    tool_response: {},
   };
 }
 
-describe('textlint PreToolUse hook', () => {
-  test('新しい AI っぽい単語の指摘があれば Write を拒否する', async () => {
+describe('textlint PostToolUse hook', () => {
+  test('Write 後に指摘が残っていれば追加コンテキストで知らせる', async () => {
     const filePath = join(workspace, 'new.md');
+    const content = 'この機能を処理の入口として使います。\n';
+    await writeFile(filePath, content);
     const { exitCode, stdout } = await runHook(
-      preToolInput('Write', filePath, {
-        content: 'この機能を処理の入口として使います。',
-      }),
+      postToolInput('Write', filePath, { content }),
     );
 
     expect(exitCode).toBe(0);
     expect(JSON.parse(stdout)).toMatchObject({
       hookSpecificOutput: {
-        hookEventName: 'PreToolUse',
-        permissionDecision: 'deny',
-        permissionDecisionReason: expect.stringContaining('入口'),
+        hookEventName: 'PostToolUse',
+        additionalContext: expect.stringContaining('入口'),
       },
     });
   });
 
-  test('Edit で既存の指摘数が増えなければ通す', async () => {
+  test('編集がツールを止めない', async () => {
+    const filePath = join(workspace, 'new.md');
+    const content = 'この機能を処理の入口として使います。\n';
+    await writeFile(filePath, content);
+    const { stdout } = await runHook(
+      postToolInput('Write', filePath, { content }),
+    );
+
+    expect(stdout).not.toContain('permissionDecision');
+  });
+
+  test('Edit で既存の指摘数が増えなければ何も返さない', async () => {
     const filePath = join(workspace, 'existing.md');
-    await writeFile(filePath, '処理の入口を追加します。\n');
+    await writeFile(filePath, '処理の入口を用意します。\n');
     const { exitCode, stdout } = await runHook(
-      preToolInput('Edit', filePath, {
+      postToolInput('Edit', filePath, {
         old_string: '追加します',
         new_string: '用意します',
       }),
     );
 
     expect(exitCode).toBe(0);
-    expect(stdout).not.toContain('"permissionDecision":"deny"');
+    expect(stdout).not.toContain('additionalContext');
   });
 
-  test('Edit で同じ指摘を増やせば拒否する', async () => {
+  test('Edit で同じ指摘を増やせば知らせる', async () => {
     const filePath = join(workspace, 'existing.md');
-    await writeFile(filePath, '処理の入口を追加します。\n');
+    await writeFile(filePath, '処理の入口を入口として使います。\n');
     const { exitCode, stdout } = await runHook(
-      preToolInput('Edit', filePath, {
+      postToolInput('Edit', filePath, {
         old_string: '追加します',
         new_string: '入口として使います',
       }),
@@ -91,8 +102,7 @@ describe('textlint PreToolUse hook', () => {
     expect(exitCode).toBe(0);
     expect(JSON.parse(stdout)).toMatchObject({
       hookSpecificOutput: {
-        permissionDecision: 'deny',
-        permissionDecisionReason: expect.stringContaining('入口'),
+        additionalContext: expect.stringContaining('入口'),
       },
     });
   });

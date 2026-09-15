@@ -117,7 +117,7 @@
           },
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/style-check.ts"
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-post-tool-use.ts"
           }
         ]
       },
@@ -147,15 +147,6 @@
           {
             "type": "command",
             "command": "rtk hook claude"
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-pre-tool-use.ts"
           }
         ]
       },

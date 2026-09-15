@@ -62,7 +62,6 @@ export function applyEdit(
     return source.split(oldString).join(newString);
   }
   if (source.indexOf(oldString, first + oldString.length) !== -1) {
-    // Edit は置換対象が複数あると実行できない。Claude Code 側のエラーに任せる。
     return undefined;
   }
   return `${source.slice(0, first)}${newString}${source.slice(first + oldString.length)}`;
@@ -95,7 +94,7 @@ export function introducedFindings(
   return introduced;
 }
 
-function formatReason(filePath: string, findings: TextlintFinding[]): string {
+function formatReport(filePath: string, findings: TextlintFinding[]): string {
   const details = findings
     .slice(0, MAX_REPORTED_FINDINGS)
     .map(
@@ -107,9 +106,9 @@ function formatReason(filePath: string, findings: TextlintFinding[]): string {
     details.push(`- ほか ${omitted} 件`);
   }
   return [
-    `textlint が今回増えた指摘を ${findings.length} 件検出しました: ${filePath}`,
+    `textlint が今回の編集で増えた指摘を ${findings.length} 件検出しました: ${filePath}`,
     ...details,
-    '指摘を直してから、もう一度編集してください。',
+    '該当箇所を Edit で直してください。書き直しは不要です。',
   ].join('\n');
 }
 
@@ -119,7 +118,7 @@ function errorText(error: unknown): string {
 
 const hook = defineHook({
   trigger: {
-    PreToolUse: {
+    PostToolUse: {
       Write: true,
       Edit: true,
     },
@@ -134,22 +133,25 @@ const hook = defineHook({
 
     try {
       const file = Bun.file(filePath);
-      const beforeText = (await file.exists()) ? await file.text() : undefined;
-      let afterText: string | undefined;
+      if (!(await file.exists())) {
+        return context.success();
+      }
+      const afterText = await file.text();
 
-      if ('content' in input) {
-        afterText = input.content;
-      } else if (beforeText !== undefined) {
-        afterText = applyEdit(
-          beforeText,
-          input.old_string,
+      // Write は全文を書き出すので、残っている指摘はすべて今回の出力に属する。
+      // Edit は書き込み後の本文から逆向きに置換して編集前を復元し、差分だけを見る。
+      let beforeText: string | undefined;
+      if (!('content' in input)) {
+        beforeText = applyEdit(
+          afterText,
           input.new_string,
+          input.old_string,
           input.replace_all,
         );
-      }
-
-      if (afterText === undefined) {
-        return context.success();
+        if (beforeText === undefined) {
+          // 復元できない置換は差分を判定できないため、誤検出を避けて何もしない。
+          return context.success();
+        }
       }
 
       const linter = await loadLinter();
@@ -166,20 +168,19 @@ const hook = defineHook({
       }
 
       return context.json({
-        event: 'PreToolUse',
+        event: 'PostToolUse',
         output: {
           hookSpecificOutput: {
-            hookEventName: 'PreToolUse',
-            permissionDecision: 'deny',
-            permissionDecisionReason: formatReason(filePath, introduced),
+            hookEventName: 'PostToolUse',
+            additionalContext: formatReport(filePath, introduced),
           },
         },
       });
     } catch (error) {
       const detail = errorText(error);
-      process.stderr.write(`[textlint-pre-tool-use] ${detail}\n`);
+      process.stderr.write(`[textlint-post-tool-use] ${detail}\n`);
       return context.nonBlockingError(
-        `textlint を実行できなかったため、この編集は続行します: ${detail}`,
+        `textlint を実行できませんでした: ${detail}`,
       );
     }
   },
