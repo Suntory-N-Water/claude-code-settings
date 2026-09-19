@@ -147,6 +147,10 @@
           {
             "type": "command",
             "command": "rtk hook claude"
+          },
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-git-message.ts"
           }
         ]
       },
@@ -194,7 +198,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/style-check-stop.ts"
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/conversation-style-check.ts"
           }
         ]
       },
@@ -202,7 +206,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/conversation-style-check.ts"
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-stop.ts"
           }
         ]
       },
