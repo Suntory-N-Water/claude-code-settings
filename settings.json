@@ -214,15 +214,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/mikke-embed.ts",
-            "async": true
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
           }
         ]
