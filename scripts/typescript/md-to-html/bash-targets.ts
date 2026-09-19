@@ -90,7 +90,7 @@ interface HeredocToken {
   kind: 'heredoc';
   body: string;
 }
-type Token = WordToken | OpToken | HeredocToken;
+export type Token = WordToken | OpToken | HeredocToken;
 
 interface PendingHeredoc {
   delimiter: string;
@@ -100,6 +100,30 @@ interface PendingHeredoc {
 
 function matchOperator(command: string, index: number): string | undefined {
   return OPERATORS.find((operator) => command.startsWith(operator, index));
+}
+
+// $( ) の中は外側とは別の引用の文脈になる。中に出てくる " や ' を外側の
+// 引用符の相手と見なすと、語の切れ目がずれる
+function commandSubstitutionEnd(command: string, start: number): number {
+  let depth = 1;
+  let index = start;
+  while (index < command.length) {
+    const char = command[index];
+    if (char === '\\') {
+      index += 2;
+      continue;
+    }
+    if (char === '(') {
+      depth++;
+    } else if (char === ')') {
+      depth--;
+      if (depth === 0) {
+        return index + 1;
+      }
+    }
+    index++;
+  }
+  return command.length;
 }
 
 // ヒアドキュメントの本文はコマンドではなくデータなので、トークン列から切り離す。
@@ -184,6 +208,12 @@ export function tokenize(command: string): Token[] {
           index += 2;
           continue;
         }
+        if (command[index] === '$' && command[index + 1] === '(') {
+          const end = commandSubstitutionEnd(command, index + 2);
+          word += command.slice(index, end);
+          index = end;
+          continue;
+        }
         word += command[index];
         index++;
       }
@@ -238,7 +268,7 @@ export function tokenize(command: string): Token[] {
   return tokens;
 }
 
-function splitSegments(tokens: Token[]): Token[][] {
+export function splitSegments(tokens: Token[]): Token[][] {
   const segments: Token[][] = [];
   let current: Token[] = [];
   for (const token of tokens) {
