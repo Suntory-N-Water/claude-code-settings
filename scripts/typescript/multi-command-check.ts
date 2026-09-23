@@ -1,8 +1,13 @@
 #!/usr/bin/env -S bun run --silent
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { parseArgs } from 'node:util';
 import { $ } from 'bun';
 import { defineHook, runHook } from 'cc-hooks-ts';
+import { join } from 'pathe';
 import { hasTypeScriptEdits } from './utils';
+
+const LOG_DIR = join(homedir(), '.claude', 'multi-command-check-log');
 
 /**
  * コマンド実行結果を表す型
@@ -95,36 +100,66 @@ async function runCommands(
   return results;
 }
 
-/**
- * コマンド実行結果からエラーメッセージを生成する
- * @param results - コマンド実行結果配列
- * @returns エラーメッセージ、またはエラーがない場合は undefined
- */
-function formatErrorMessage(results: CommandResult[]): string | undefined {
-  const failures = results.filter((r) => r.code !== 0);
+function commandOutput(result: CommandResult): string {
+  const outputs = [result.stdout, result.stderr].filter(Boolean);
+  return outputs.length > 0 ? outputs.join('\n') : 'No output captured';
+}
 
-  if (failures.length === 0) {
+function writeFailureLog(
+  failures: CommandResult[],
+  sessionId: string,
+): string | undefined {
+  try {
+    mkdirSync(LOG_DIR, { recursive: true });
+    const logPath = join(LOG_DIR, `${sessionId}.log`);
+    const body = failures
+      .map(
+        (f) =>
+          `=== bun run ${f.command} (exit ${f.code}) ===\n${commandOutput(f)}`,
+      )
+      .join('\n\n');
+    writeFileSync(logPath, `${new Date().toISOString()}\n\n${body}\n`, 'utf-8');
+    return logPath;
+  } catch (error) {
+    process.stderr.write(
+      `[multi-command-check] ${error instanceof Error ? error.message : String(error)}\n`,
+    );
     return undefined;
   }
+}
 
-  const errorMessages = failures
-    .map((f) => {
-      // stdout と stderr の両方を含めて 型チェック で stderr に出力がある場合でも
-      // 個別の結果を返却させるようにする
-      // 元のコード: const output = f.stderr || f.stdout || 'No output captured';
-      const outputs = [f.stdout, f.stderr].filter(Boolean);
-      const rawOutput =
-        outputs.length > 0 ? outputs.join('\n') : 'No output captured';
-      const MAX_OUTPUT_LENGTH = 500;
-      const output =
-        rawOutput.length > MAX_OUTPUT_LENGTH
-          ? `${rawOutput.slice(0, MAX_OUTPUT_LENGTH)}\n... (truncated, ${rawOutput.length - MAX_OUTPUT_LENGTH} more chars)`
-          : rawOutput;
-      return `\x1b[31m❌ Command failed: bun run ${f.command}\x1b[0m\n${output}`;
-    })
-    .join('\n\n');
+function formatErrorMessage(
+  failures: CommandResult[],
+  sessionId: string,
+): string {
+  const header =
+    '\x1b[31mSome commands failed. Fix the following errors:\x1b[0m';
+  const list = failures
+    .map((f) => `- bun run ${f.command} (exit ${f.code})`)
+    .join('\n');
 
-  return `\x1b[31mSome commands failed. Fix the following errors:\x1b[0m\n\n${errorMessages}`;
+  const logPath = writeFailureLog(failures, sessionId);
+  if (logPath === undefined) {
+    const MAX_OUTPUT_LENGTH = 500;
+    const fallback = failures
+      .map((f) => {
+        const raw = commandOutput(f);
+        const output =
+          raw.length > MAX_OUTPUT_LENGTH
+            ? `${raw.slice(0, MAX_OUTPUT_LENGTH)}\n... (truncated, ${raw.length - MAX_OUTPUT_LENGTH} more chars)`
+            : raw;
+        return `\x1b[31m❌ bun run ${f.command}\x1b[0m\n${output}`;
+      })
+      .join('\n\n');
+    return `${header}\n\n${fallback}`;
+  }
+
+  return [
+    header,
+    list,
+    '',
+    `結果を ${logPath} に出力しました。まず先頭 50 行ほど読み、足りなければ該当箇所を grep して必要な範囲だけを確認してください。`,
+  ].join('\n');
 }
 
 /**
@@ -174,11 +209,10 @@ export const multiCommandCheckHook = defineHook({
 
     const results = await runCommands(commands, cwd);
 
-    // エラーがあればブロッキングエラーを返す
-    const errorMessage = formatErrorMessage(results);
+    const failures = results.filter((r) => r.code !== 0);
 
-    if (errorMessage) {
-      return c.blockingError(errorMessage);
+    if (failures.length > 0) {
+      return c.blockingError(formatErrorMessage(failures, c.input.session_id));
     }
 
     // 全て成功
