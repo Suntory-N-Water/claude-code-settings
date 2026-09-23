@@ -1,8 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "cleanupPeriodDays": 999,
+  "syncClaudeAiPlugins": false,
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
+    "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS": "1",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
     "CLAUDE_CODE_NEW_INIT": "1",
     "CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL": "1",
@@ -30,9 +32,9 @@
   },
   "permissions": {
     "deny": [
-      "Bash(git config --global credential.*)",
-      "Bash(gh auth setup-git)",
-      "Bash(rm -rf)"
+      "Bash(git config --global credential.*:*)",
+      "Bash(gh auth setup-git:*)",
+      "Bash(rm -rf:*)"
     ],
     "defaultMode": "auto"
   },
@@ -63,15 +65,6 @@
           {
             "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/session-start-reminder.ts"
-          }
-        ]
-      },
-      {
-        "matcher": "startup|clear|compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/opus5-rule-inject.ts"
           }
         ]
       },
@@ -198,14 +191,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/conversation-style-check.ts"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-stop.ts"
           }
         ]
@@ -278,6 +263,13 @@
   "emojiCompletionEnabled": false,
   "awaySummaryEnabled": false,
   "showClearContextOnPlanAccept": true,
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-or-agents-md"
+      }
+    }
+  },
   "plansDirectory": ".claude/plans",
   "tui": "fullscreen",
   "timeFormat": "24-hour",
