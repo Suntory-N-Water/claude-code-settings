@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "cleanupPeriodDays": 999,
+  "syncClaudeAiSkills": false,
   "syncClaudeAiPlugins": false,
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
@@ -20,6 +21,7 @@
     "CLAUDE_CODE_DISABLE_ADVISOR_TOOL": "1",
     "CLAUDE_CODE_GLOB_NO_IGNORE": "false",
     "CLAUDE_CODE_WEBFETCH_CACHE_TTL_MS": "3600000",
+    "CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH": "1024",
     "DISABLE_BUG_COMMAND": "1",
     "DISABLE_DOCTOR_COMMAND": "1",
     "DISABLE_UPGRADE_COMMAND": "1",
@@ -32,7 +34,7 @@
   },
   "permissions": {
     "deny": [
-      "Bash(git config --global credential.*:*)",
+      "Bash(git config --global credential.:*)",
       "Bash(gh auth setup-git:*)",
       "Bash(rm -rf:*)"
     ],
@@ -191,14 +193,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-stop.ts"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
           }
         ]
@@ -243,6 +237,25 @@
     "type": "command",
     "command": "~/.claude/scripts/statusline.py"
   },
+  "enabledPlugins": {
+    "mattpocock-skills@claude-plugins-official": true,
+    "general-dev-mods@suntory-n-water-marketplace": true,
+    "plugin-authoring@builtin": false
+  },
+  "extraKnownMarketplaces": {
+    "suntory-n-water-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "Suntory-N-Water/suntory-n-water-marketplace"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
   "outputStyle": "Concise",
   "language": "日本語",
   "feedbackSurveyRate": 0,
@@ -256,6 +269,9 @@
       "effortLevel": "high"
     },
     "claude-fable-5-1": {
+      "effortLevel": "medium"
+    },
+    "claude-opus-5-5": {
       "effortLevel": "medium"
     }
   },
