@@ -40,7 +40,6 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus",
   "disableClaudeAiConnectors": true,
   "skillOverrides": {
     "dataviz": "off",
@@ -196,6 +195,14 @@
             "command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/japanese-guard.ts"
+          }
+        ]
       }
     ],
     "SubagentStart": [
@@ -273,6 +280,9 @@
     },
     "claude-opus-5-5": {
       "effortLevel": "medium"
+    },
+    "claude-sonnet-5-5": {
+      "effortLevel": "medium"
     }
   },
   "promptSuggestionEnabled": false,
@@ -305,5 +315,6 @@
       "$defaults"
     ]
   },
-  "leftArrowOpensAgents": false
+  "leftArrowOpensAgents": false,
+  "model": "opus"
 }
