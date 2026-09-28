@@ -37,8 +37,20 @@ function loadLinter(): Promise<Linter> {
   return linterPromise;
 }
 
+const CODE_EXTENSIONS = new Set([
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+  '.ts',
+  '.tsx',
+  '.mts',
+  '.cts',
+]);
+
 function isTarget(filePath: string): boolean {
-  if (extname(filePath).toLowerCase() !== '.md') {
+  const ext = extname(filePath).toLowerCase();
+  if (ext !== '.md' && !CODE_EXTENSIONS.has(ext)) {
     return false;
   }
   const normalized = filePath.replaceAll('\\', '/');
@@ -154,12 +166,17 @@ const hook = defineHook({
         }
       }
 
+      // textlint は JS/TS を読むプラグインを持たず、拡張子のまま渡すと例外になる。
+      // 辞書の語は日本語なので、プレーンテキストとして読ませてもコード部分は誤検出しない
+      const lintPath = CODE_EXTENSIONS.has(extname(filePath).toLowerCase())
+        ? `${filePath}.txt`
+        : filePath;
       const linter = await loadLinter();
       const beforeFindings =
         beforeText === undefined
           ? []
-          : (await linter.lintText(beforeText, filePath)).messages;
-      const afterFindings = (await linter.lintText(afterText, filePath))
+          : (await linter.lintText(beforeText, lintPath)).messages;
+      const afterFindings = (await linter.lintText(afterText, lintPath))
         .messages;
       const introduced = introducedFindings(beforeFindings, afterFindings);
 
