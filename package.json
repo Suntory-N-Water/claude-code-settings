@@ -36,6 +36,7 @@
     "mermaid": "^11.17.2",
     "micromark": "^4.0.2",
     "micromark-extension-gfm": "^3.0.0",
+    "mupdf": "^1.28.1",
     "node-htmldiff": "^0.9.4",
     "pathe": "^2.0.3",
     "playwright": "^1.63.0",

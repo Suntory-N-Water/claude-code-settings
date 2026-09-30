@@ -4,6 +4,7 @@ import { defineHook } from 'cc-hooks-ts';
 import { Defuddle } from 'defuddle/node';
 import { parseHTML } from 'linkedom';
 import { parseGitHubUrlToGhCommand } from '../utils/github';
+import { extractPdfMarkdown } from '../utils/pdf';
 import { isRawContentURL } from '../utils/url';
 
 const OUTPUT_ROOT = join(homedir(), '.claude', 'web-fetch');
@@ -114,6 +115,56 @@ async function extractMarkdown(
   return { markdown: result.content, title: result.title };
 }
 
+function isPdfResponse(response: Response, urlObj: URL): boolean {
+  const contentType = response.headers.get('Content-Type')?.toLowerCase();
+  if (contentType?.includes('application/pdf') === true) {
+    return true;
+  }
+  // application/octet-stream で PDF を返すサーバーがあるため拡張子でも判定する
+  return urlObj.pathname.toLowerCase().endsWith('.pdf');
+}
+
+type ExtractedPage = {
+  markdown: string;
+  title?: string;
+  description?: string;
+};
+
+async function extractHtmlPage(
+  response: Response,
+  url: string,
+): Promise<ExtractedPage | undefined> {
+  let html = await response.text();
+  let extracted = await extractMarkdown(html, url);
+  // 静的ページでもたまに空のマークダウンが出力されることがある
+  // その場合はPlaywrightで動的にHTMLを取得する
+  if (extracted.markdown.length === 0) {
+    const { fetchDynamicHtml } = await import('../utils/playwright');
+    html = await fetchDynamicHtml(url);
+    extracted = await extractMarkdown(html, url);
+    // Playwrightでも取得できない場合は通常のWebFetchを使う
+    if (extracted.markdown.length === 0) {
+      return undefined;
+    }
+  }
+
+  const metaTags = collectMetaTags(html);
+  return {
+    markdown: extracted.markdown,
+    title: firstNonEmpty(
+      metaTags.get('og:title'),
+      metaTags.get('twitter:title'),
+      extractTitleTag(html),
+      normalizeText(extracted.title),
+    ),
+    description: firstNonEmpty(
+      metaTags.get('description'),
+      metaTags.get('og:description'),
+      metaTags.get('twitter:description'),
+    ),
+  };
+}
+
 const hook = defineHook({
   trigger: {
     PreToolUse: {
@@ -152,7 +203,6 @@ const hook = defineHook({
     }
 
     const response = await fetch(url);
-    let html = await response.text();
     if (!response.ok) {
       return c.success();
     }
@@ -165,32 +215,14 @@ const hook = defineHook({
       return c.success();
     }
 
-    let extracted = await extractMarkdown(html, url);
-    // 静的ページでもたまに空のマークダウンが出力されることがある
-    // その場合はPlaywrightで動的にHTMLを取得する
-    if (extracted.markdown.length === 0) {
-      const { fetchDynamicHtml } = await import('../utils/playwright');
-      html = await fetchDynamicHtml(url);
-      extracted = await extractMarkdown(html, url);
-      // Playwrightでも取得できない場合は通常のWebFetchを使う
-      if (extracted.markdown.length === 0) {
-        return c.success();
-      }
+    const page: ExtractedPage | undefined = isPdfResponse(response, urlObj)
+      ? await extractPdfMarkdown(await response.arrayBuffer())
+      : await extractHtmlPage(response, url);
+    // 画像だけの PDF などで本文を取得できない場合は通常のWebFetchに任せる
+    if (page === undefined || page.markdown.length === 0) {
+      return c.success();
     }
-    const markdown = extracted.markdown;
-
-    const metaTags = collectMetaTags(html);
-    const title = firstNonEmpty(
-      metaTags.get('og:title'),
-      metaTags.get('twitter:title'),
-      extractTitleTag(html),
-      normalizeText(extracted.title),
-    );
-    const description = firstNonEmpty(
-      metaTags.get('description'),
-      metaTags.get('og:description'),
-      metaTags.get('twitter:description'),
-    );
+    const { markdown, title, description } = page;
 
     // タイトルが衝突した場合は上書きする。取得直後に読まれる前提なので履歴は残さない
     const outputPath = join(
