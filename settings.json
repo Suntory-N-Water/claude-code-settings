@@ -9,7 +9,6 @@
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
     "CLAUDE_CODE_NEW_INIT": "1",
     "CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL": "1",
-    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
     "ENABLE_CLAUDEAI_MCP_SERVERS": "false",
     "CLAUDE_CODE_AUTO_CONNECT_IDE": "false",
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
@@ -245,6 +244,7 @@
     "command": "~/.claude/scripts/statusline.py"
   },
   "enabledPlugins": {
+    "general-dev-skills@suntory-n-water-marketplace": true,
     "mattpocock-skills@claude-plugins-official": true,
     "general-dev-mods@suntory-n-water-marketplace": true,
     "plugin-authoring@builtin": false
@@ -263,7 +263,7 @@
       }
     }
   },
-  "outputStyle": "Concise",
+  "outputStyle": "sui-style",
   "language": "日本語",
   "feedbackSurveyRate": 0,
   "feedbackDrafts": "off",
