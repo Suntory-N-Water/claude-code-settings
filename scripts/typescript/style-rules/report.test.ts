@@ -12,12 +12,12 @@ const severe: Violation = {
 };
 
 const warning: Violation = {
-  ruleId: 'empty-emphasis',
-  category: '空虚な強調',
+  ruleId: 'jargon-contract',
+  category: '過去の指摘',
   severity: 'warning',
-  matched: '非常に',
-  sentence: 'これは非常に速い。',
-  good: '数値か比較対象を書く',
+  matched: '契約',
+  sentence: 'この関数の契約を決める。',
+  good: '入出力の取り決めをそのまま書く',
 };
 
 describe('差し戻しの文面', () => {
@@ -73,7 +73,7 @@ describe('差し戻しの文面', () => {
   // });
 
   test('同じ規則が別の文に当たると、2 度目の書き直し方が省かれること', () => {
-    const second: Violation = { ...warning, sentence: 'これも非常に軽い。' };
+    const second: Violation = { ...warning, sentence: 'あの関数の契約も決める。' };
 
     const report = formatReport('/a/b.md', [warning, second]);
 

@@ -19,29 +19,12 @@ function wordViolations(violations: Violation[]): Violation[] {
 // 語ルールと 1 対 1 で対応させる。例文の無いルールを足すと型検査が落ちる
 const hitCases = {
   'empty-adjective-emphasis': ['型定義は鍵となる。', '鍵となる'],
-  'empty-adjective-weak': ['型定義は不可欠である。', '不可欠'],
   'empty-adjective-coverage': ['多角的な検討を行う。', '多角的'],
   'front-facing': ['この前提を正面から回収する。', '正面から回収する'],
   // dash: ['設計—実装の順で進める。', '—'],
   preview: ['本章では設計を扱う。', '本章では'],
-  summary: ['まとめると、原因は設定である。', 'まとめると'],
-  explore: ['この問題を探求する。', '探求する'],
-  'empty-verb-dig': ['原因を掘り下げる。', '掘り下げる'],
-  'empty-verb-touch': ['失敗例に触れる。', '触れる'],
-  'connective-frame': ['この設定において問題が起きる。', 'において'],
   'connective-additive': ['また、実行時間を測った。', 'また、'],
-  'weak-hedge': ['これは速いと言えるだろう。', 'と言えるだろう'],
-  'empty-emphasis': ['これは非常に速い。', '非常に'],
-  'jargon-trap': ['これは設定の罠である。', '罠'],
-  'jargon-technique': ['これは便利なテクである。', 'テク'],
-  dismissive: ['この案はカスである。', 'カス'],
-  'calm-down': [
-    '少し冷静になって考えると、原因は設定である。',
-    '少し冷静になって考えると',
-  ],
-  'jargon-projection': ['同期処理の射影も合わせる。', '射影'],
   'jargon-window': ['設定が食い違う窓が生まれる。', '窓'],
-  'jargon-lottery': ['更新のたびに引き直すくじなので、いずれ引く。', 'くじ'],
   'jargon-contract': ['この関数の契約を決める。', '契約'],
   'jargon-promise': ['この API は順序を約束する。', '約束'],
   'jargon-wire': ['ハンドラを配線する。', '配線'],
@@ -75,15 +58,24 @@ const hitCases = {
   'invisible-char': ['設定を\u200B読み込む。', '\u200B'],
   'check-cross-mark': ['❌ 古い書き方を使う。', '❌'],
   'jargon-draw': ['全レシピから1件だけ引きます。', '1件だけ引き'],
-  'jargon-pitfall': ['この設定には落し穴がある。', '落し穴'],
   'jargon-block-off': ['これで両方の不具合を塞ぐ。', '塞ぐ'],
   'jargon-hit': ['Bash からコマンドを叩くしかない。', '叩く'],
-  'jargon-magnitude': ['この方式は桁違いに速い。', '桁違い'],
-  'jargon-mixup': ['引数を取り違えると別の行を消す。', '取り違え'],
   'jargon-silently': ['設定が合わないと静かに失敗する。', '静かに失敗'],
   'jargon-tilt': ['迷ったら再試行しない側に倒す。', '側に倒す'],
   'jargon-let-escape': ['例外を上位へ逃がす。', '逃がす'],
   'jargon-boundary': ['ここが責務の境界になる。', 'の境界'],
+  'abstract-metaphor-noun': ['この表が判断の羅針盤になる。', '羅針盤'],
+  'metaphor-verb-ai': ['動かしながら引き返す。', '引き返す'],
+  'inanimate-subject': ['レビューの文化が醸成された。', '醸成'],
+  'filler-preface': ['避けたいのは再試行の重複です。', '避けたいのは'],
+  'stiff-phrase': ['確認すべき設定を挙げる。', 'すべき'],
+  'double-negation': [
+    'Edge Runtime で使えないわけではありません。',
+    'ないわけではありません',
+  ],
+  'redundant-approx': ['約 20 件くらいある。', '約 20 件くらい'],
+  'relative-reference': ['詳細は §3 で説明する。', '§3'],
+  'version-yori': ['この機能は v3 より対応している。', '3 より対応'],
 } as const satisfies Record<WordRuleId, readonly [string, string]>;
 
 const hitRows: [string, string, string][] = Object.entries(hitCases).map(
@@ -96,13 +88,8 @@ const missCases: [WordRuleId, string][] = [
   ['preview', 'ここでは設定を確認する。'],
   ['connective-additive', 'また会う日まで待つ。'],
   ['connective-additive', 'これはまた、別の話である。'],
-  ['jargon-technique', 'これは便利なテクニックである。'],
-  ['dismissive', 'カスタム設定を使う。'],
   ['jargon-window', '問い合わせ窓口に連絡する。'],
   ['jargon-window', '窓ガラスの寸法を測る。'],
-  ['jargon-lottery', 'くじらの回遊経路を記録する。'],
-  ['jargon-lottery', '足首をくじいて歩けなくなった。'],
-  ['jargon-lottery', '心がくじけそうになる。'],
   ['jargon-contract', '雇用契約を確認する。'],
   ['jargon-contract', '契約書に署名する。'],
   ['jargon-promise', 'お約束の展開である。'],
@@ -150,6 +137,11 @@ const missCases: [WordRuleId, string][] = [
   ['jargon-boundary', 'テストの境界値を洗い出す。'],
   ['jargon-boundary', '土地の境界線を確かめる。'],
   ['jargon-silently', '設定が静かに無視される。'],
+  ['abstract-metaphor-noun', '白金を触媒反応に使う。'],
+  ['metaphor-verb-ai', '雨が強くなったので来た道を引き返す。'],
+  ['stiff-phrase', '愛すべき失敗作である。'],
+  ['version-yori', '3 より大きい値を返す。'],
+  ['ai-texture', '朝に体温計で測る。'],
 ];
 
 describe('語のルール', () => {
@@ -167,15 +159,6 @@ describe('語のルール', () => {
     const violations = await check(sentence);
 
     expect(ofRule(violations, ruleId)).toEqual([]);
-  });
-
-  test('罠と同じ扱いの語も同じルールで検出されること', async () => {
-    const violations = await check('そのバッチに地雷が入っていた。');
-
-    expect(violations[0]).toMatchObject({
-      ruleId: 'jargon-trap',
-      matched: '地雷',
-    });
   });
 
   test('コーパス校正で対象から外した語は検出されないこと', async () => {
@@ -229,14 +212,14 @@ describe('語のルール', () => {
 
   test('同じ warning が 3 文に当たる時、2 文で打ち切ること', async () => {
     const source = [
-      'この処理は非常に速い。',
-      'あの処理も非常に軽い。',
-      'どの処理も非常に短い。',
+      'この関数の契約を決める。',
+      'あの関数の契約も決める。',
+      'どの関数の契約も決める。',
     ].join('\n\n');
 
     const violations = await check(source);
 
-    expect(ofRule(violations, 'empty-emphasis')).toHaveLength(2);
+    expect(ofRule(violations, 'jargon-contract')).toHaveLength(2);
   });
 });
 
@@ -429,6 +412,50 @@ describe('敬体と常体の混在', () => {
   });
 });
 
+describe('曖昧な語の集中', () => {
+  const vague =
+    '今回の対応では、申請時の確認方法と担当者への連絡手順を一部変更しました。これにより、確認不足を減らし、対応を早められる見込みです。今後は状況に応じて運用を調整しながら、必要な対応を進めます。詳細は関係者へ別途共有する予定です。';
+
+  test('1 段落に曖昧な語が 3 個以上ある時、語と段落が示されること', async () => {
+    const violations = await check(vague);
+
+    const hit = ofRule(violations, 'vague-density')[0];
+    expect(hit?.matched).toContain('一部変更');
+    expect(hit?.matched).toContain('別途');
+    expect(hit?.sentence).toBe(vague);
+  });
+
+  test('対象と変更内容を書いた段落は指摘されないこと', async () => {
+    const source =
+      '今回の対応では、申請担当者が送信前に確認する項目を3つに統一し、承認担当者への連絡を自動通知に変更しました。確認手順と連絡方法を固定したため、確認不足を減らし、承認までの待ち時間を短縮できます。変更内容は次回申請分から適用します。';
+
+    const violations = await check(source);
+
+    expect(ofRule(violations, 'vague-density')).toEqual([]);
+  });
+
+  test('空行で分かれた段落の語は合算しないこと', async () => {
+    const source = [
+      '設定を一部変更しました。詳細は別途共有します。',
+      '',
+      '今後は手順書を参照します。',
+    ].join('\n');
+
+    const violations = await check(source);
+
+    expect(ofRule(violations, 'vague-density')).toEqual([]);
+  });
+
+  test('「など」「かなり」は数えないこと', async () => {
+    const source =
+      '設定などを一部変更しました。かなり速くなりました。詳細は別途共有します。';
+
+    const violations = await check(source);
+
+    expect(ofRule(violations, 'vague-density')).toEqual([]);
+  });
+});
+
 describe('対句の多用', () => {
   const line = (index: number) => `${index} 番は A ではなく B を選ぶ。`;
 
@@ -522,7 +549,9 @@ describe('体言止め', () => {
 
 describe('重大度', () => {
   test('重大なルールに当たった文だけが重大として取り出せること', async () => {
-    const source = ['型定義は鍵となる。', 'これは非常に速い。'].join('\n');
+    const source = ['型定義は鍵となる。', 'この関数の契約を決める。'].join(
+      '\n',
+    );
 
     const severe = severeViolations(await check(source));
 

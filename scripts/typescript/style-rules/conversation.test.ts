@@ -5,7 +5,7 @@ import { conversationLogPath, decideConversation } from './conversation.ts';
 import { createReportedStore, type ReportedStore } from './session-store.ts';
 
 const SEVERE = '型定義は鍵となる。';
-const WARNING_ONLY = 'ここで設定を深掘りする。';
+const WARNING_ONLY = 'ここで関数の契約を決める。';
 const CLEAN = 'この関数は設定ファイルを読み込む。';
 const SESSION_ID = 'test-session';
 

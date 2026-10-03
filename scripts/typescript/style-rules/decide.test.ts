@@ -12,7 +12,7 @@ import {
 const SEVERE = '型定義は鍵となる。';
 const ANOTHER_SEVERE = '多角的な検討を行う。';
 const POLITE_SEVERE = '型定義は根本的な部分です。';
-const WARNING = 'これは非常に速い。';
+const WARNING = 'この関数の契約を決める。';
 const CLEAN = 'この関数は設定ファイルを読み込む。';
 // 「ます」が 3 連続する。文体の混在と体言止めは同時に起こさない
 const REPEATED_ENDING = [
@@ -192,7 +192,7 @@ describe('書き込み直後の検査', () => {
 
       const reason = await write(filePath, WARNING);
 
-      expect(reason).toContain('非常に');
+      expect(reason).toContain('契約');
     });
 
     test('別のファイルの警告は互いの抑制に影響しないこと', async () => {

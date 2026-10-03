@@ -4,6 +4,7 @@ import {
   plainEndings,
   politeEndings,
   type Violation,
+  vaguePatterns,
 } from './rules.ts';
 import type { Sentence } from './sanitize.ts';
 import { loadTokenizer } from './tokenizer.ts';
@@ -136,6 +137,49 @@ function checkDewanaku(prose: Sentence[]): Violation[] {
   ];
 }
 
+// sanitize が空行を落とすため、行番号が 2 以上飛んだところを段落の切れ目とみる
+function paragraphs(prose: Sentence[]): Sentence[][] {
+  const result: Sentence[][] = [];
+  let previousLine: number | undefined;
+  for (const sentence of prose) {
+    const current = result.at(-1);
+    if (
+      current === undefined ||
+      previousLine === undefined ||
+      sentence.lineNumber - previousLine > 1
+    ) {
+      result.push([sentence]);
+    } else {
+      current.push(sentence);
+    }
+    previousLine = sentence.lineNumber;
+  }
+  return result;
+}
+
+function vagueWords(text: string): string[] {
+  return vaguePatterns.flatMap((pattern) => text.match(pattern) ?? []);
+}
+
+function checkVagueDensity(prose: Sentence[]): Violation[] {
+  const rule = documentRule('vague-density');
+  return paragraphs(prose)
+    .map((paragraph) => ({
+      paragraph,
+      words: paragraph.flatMap((sentence) => vagueWords(sentence.text)),
+    }))
+    .filter(({ words }) => words.length >= rule.threshold)
+    .slice(0, MAX_EXAMPLES)
+    .map(({ paragraph, words }) => ({
+      ruleId: rule.id,
+      category: rule.category,
+      severity: rule.severity,
+      matched: `1 段落に曖昧な語が ${words.length} 個(${words.join('、')})`,
+      sentence: paragraph.map((sentence) => sentence.text).join(''),
+      good: rule.good,
+    }));
+}
+
 async function checkTaigendome(prose: Sentence[]): Promise<Violation[]> {
   const rule = documentRule('taigendome');
   if (prose.length === 0) {
@@ -211,6 +255,7 @@ export async function checkDocument(
     ...checkEndingRepeat(prose),
     ...checkStyleMix(prose),
     ...checkDewanaku(prose),
+    ...checkVagueDensity(prose),
     ...taigendome,
     ...heading,
   ];

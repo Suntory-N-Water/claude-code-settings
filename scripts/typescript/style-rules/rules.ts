@@ -35,15 +35,6 @@ export const wordRules = [
     good: '何が無いと何ができなくなるかを書く。例:「型定義が無いと tool_input の形が決まらない」',
   },
   {
-    // 「不可欠」は人間側でも一定数使われる(人間 6〜15 回 vs AI 2 回前後)ため、
-    // 同じ空虚な形容でも severe には上げない
-    id: 'empty-adjective-weak',
-    category: '空虚な形容',
-    severity: 'warning',
-    pattern: /不可欠/u,
-    good: '何が無いと何ができなくなるかを書く。例:「型定義が無いと tool_input の形が決まらない」',
-  },
-  {
     id: 'empty-adjective-coverage',
     category: '空虚な形容',
     severity: 'severe',
@@ -73,111 +64,20 @@ export const wordRules = [
     good: '予告を削って主張から書く。例:「評価の中心は、正しさを誰が知っているかにある」',
   },
   {
-    id: 'summary',
-    category: '総括',
-    severity: 'warning',
-    pattern: /まとめると|要するに|に他ならない/u,
-    good: '直前の言い換えだけなら削る。結論は一度だけ書く',
-  },
-  {
-    id: 'explore',
-    category: '予告',
-    severity: 'warning',
-    pattern: /探求する/u,
-    good: '何をするかを書く。例:「〇〇の理論を扱う」',
-  },
-  {
-    id: 'empty-verb-dig',
-    category: '空虚な動詞',
-    severity: 'warning',
-    pattern: /掘り下げる|深掘りする|言語化する/u,
-    good: '何をどう書いたかを示す。例:「実測値を 3 種類に分けて数えた」',
-  },
-  {
-    id: 'empty-verb-touch',
-    category: '空虚な動詞',
-    severity: 'warning',
-    pattern: /触れる|言及する/u,
-    good: '何をどこまで説明するかを書く。例:「〇〇の失敗例だけを説明する」',
-  },
-  {
-    id: 'connective-frame',
-    category: '接続の型',
-    severity: 'warning',
-    pattern: /において|という側面から|の観点から/u,
-    good: '助詞でそのまま書く。例:「この設定では」「実行時間で比べると」',
-  },
-  {
     id: 'connective-additive',
     category: '接続の型',
     severity: 'warning',
     pattern: /^(?:さらに|また|加えて)[、，]/u,
     good: '前の文との論理関係を示す語にする。例:「そのため」「一方」。関係が無いなら段落を分ける',
   },
-  {
-    id: 'weak-hedge',
-    category: '弱い緩和',
-    severity: 'warning',
-    pattern: /と言えるだろう|かもしれない/u,
-    good: '根拠があるなら断定する。推量・仮定・読者の疑念・作中人物の認識を表すときは残してよい',
-  },
-  {
-    id: 'empty-emphasis',
-    category: '空虚な強調',
-    severity: 'warning',
-    pattern: /非常に|極めて|大いに/u,
-    good: '数値か比較対象を書く。例:「同じ処理の 3 倍速い」',
-  },
   // 「まさに」は検出しない。人間の使用が多く AI の癖ではないと実測されている
   // (人間 24 回 vs AI 0 回)
-  {
-    id: 'jargon-trap',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /罠|地雷/u,
-    good: '何が起きるかをそのまま書く。例:「この設定では stdout が Claude に届かない」',
-  },
-  {
-    id: 'jargon-technique',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /テク(?![ニノス])/u,
-    good: '正式名称で書く。例:「手法」「書き方」',
-  },
-  {
-    id: 'dismissive',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /カス(?![タケ])|くだらない/u,
-    good: '対象を名指しして、何がどう不足しているかを書く',
-  },
-  {
-    id: 'calm-down',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /少し冷静になって考えると/u,
-    good: '前置きを削って結論から書く',
-  },
-  {
-    id: 'jargon-projection',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /射影/u,
-    good: 'データに何をしたかをそのまま書く。例:「jq がフィールドを絞り込んでいる」「不要な列を取り除く」。数学・グラフィックスの用語(正射影、射影変換など)は残してよい',
-  },
   {
     id: 'jargon-window',
     category: '過去の指摘',
     severity: 'warning',
     pattern: /窓(?![口際辺枠]|ガラス)/u,
     good: '時間帯・期間・状態をそのまま書く。例:「設定とコードが食い違っている時間帯」「再ビルドが完了するまでの数分間」。建築や UI の実物の窓は残してよい',
-  },
-  {
-    id: 'jargon-lottery',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /くじ(?![らかきくけい])/u,
-    good: '確率と回数をそのまま書く。例:「実行のたびに 1.5% の確率で失敗する」「回数を重ねればいずれ失敗する」。実際の抽選・抽選機能について書く場合は残してよい',
   },
   {
     id: 'jargon-contract',
@@ -293,14 +193,15 @@ export const wordRules = [
     category: '質感を装う語',
     severity: 'severe',
     pattern:
-      /手触り|肌感|(?<!総|発|摂取)熱量|腹落ち|血の通った|地に足のついた|等身大|泥臭|(?:の|という)営み/u,
+      /手触り|肌感|(?<!総|発|摂取)熱量|腹落ち|血の通った|地に足のついた|等身大|泥臭|(?:の|という)営み|体温(?![計をがは])/u,
     good: '何を見て何を感じたかをそのまま書く。例:「押した時の反発が強い」「実際に触ると angular より重い」',
   },
   {
     id: 'ai-grandiose',
     category: '大げさな熟語',
     severity: 'severe',
-    pattern: /真理|境地|虚飾|深淵|禁欲的|冷徹|美学|結晶(?![化構水析])/u,
+    pattern:
+      /真理|境地|虚飾|深淵|禁欲的|冷徹|美学|結晶(?![化構水析])|優美|極致|宿命/u,
     good: '普通の感想を普通の語で書く。例:「使いにくかった」「思ったより速い」',
   },
   {
@@ -331,7 +232,7 @@ export const wordRules = [
     category: '決まり文句',
     severity: 'severe',
     pattern:
-      /いかがでした|ぜひ.{0,12}してみてください|現代社会において|近年[、，]|結論から言うと/u,
+      /いかがでした|ぜひ.{0,12}してみてください|現代社会において|近年[、，]|結論から言うと|参考になれば幸い|飛躍的に/u,
     good: '前置きと締めを削り、結果だけ書く。例:「設定を 2 箇所変えた」',
   },
   {
@@ -397,14 +298,6 @@ export const wordRules = [
     good: '「引く」を使わず、選ぶ・表示する・取り出すのどれをするかをそのまま書く。例:「全レシピから1件だけ選ぶ」「ランダムに1件表示する」。くじや線や辞書を実際に引く意味は残してよい',
   },
   {
-    // textlint は送り仮名を省いた「落し穴」を検出しない
-    id: 'jargon-pitfall',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /落し穴/u,
-    good: '何が起きるかをそのまま書く。例:「この順で書くと環境変数が読まれない」「引数を省くと既定値で上書きされる」。地面に掘る実際の落とし穴は残してよい',
-  },
-  {
     // 物理的にふさぐ意味と、手や席が使用中である意味は助詞ごと後読みで外す
     id: 'jargon-block-off',
     category: '過去の指摘',
@@ -425,20 +318,6 @@ export const wordRules = [
   },
   // 本人の使用がある語(実測・切り分け・瞬間・断定・既定)は入れていない。
   // 出典 https://nyosegawa.com/posts/qiita-writing-before-after-ai/
-  {
-    id: 'jargon-magnitude',
-    category: '判断の言い回し',
-    severity: 'warning',
-    pattern: /桁違い/u,
-    good: '何倍かを数値で書く。例:「処理時間が 30 倍になる」「件数が 2 桁多い」',
-  },
-  {
-    id: 'jargon-mixup',
-    category: '判断の言い回し',
-    severity: 'warning',
-    pattern: /取り違え/u,
-    good: '何と何を混同するかを書く。例:「id と index を逆に渡す」',
-  },
   {
     // silently fail / silently ignore の直訳。textlint は「静かに」の後の
     // 壊れる・落ちる・止まる・消える と受身の「無視される」だけを検出する
@@ -469,6 +348,79 @@ export const wordRules = [
     severity: 'warning',
     pattern: /(?:の|という)境界(?![値線面])/u,
     good: 'どこで分かれるかをそのまま書く。例:「ここから先はライブラリの責務」「この関数は検証をしない」',
+  },
+  // ここから下は yomiyasu(https://github.com/nanaism/yomiyasu)の lint と
+  // blog-writing プラグインの sui-style.md が挙げる語のうち、history.jsonl の
+  // 本人の入力 12,367 件で使われていなかったものだけを採る。貼り付けた文と、
+  // AI の癖として引用した文に出てくる語は、本人の使用に数えていない
+  {
+    id: 'abstract-metaphor-noun',
+    category: '抽象比喩の名詞',
+    severity: 'severe',
+    pattern: /羅針盤|起爆剤|触媒(?!反応|作用|活性)|メンタルモデル/u,
+    good: '指しているものの名前をそのまま書く。例:「判断の基準にする表」「利用者が想定している操作の順番」。化学の触媒は残してよい',
+  },
+  {
+    // 実際に来た道を戻る意味は助詞ごと後読みで外す
+    id: 'metaphor-verb-ai',
+    category: '作業の比喩',
+    severity: 'severe',
+    pattern:
+      /(?<!(?:道|駅|家|山|港|宿|部屋|来た道)(?:を|へ|に) ?)引き返[さしすせそ]|代わりに添え|(?:前提|基盤)が崩れ|キャッシュが(?:生きて|死んで)/u,
+    good: '起きる問題か行う操作をそのまま書く。例:「問題が起きたら変更前の状態に戻す」「キャッシュの有効期間が切れている」',
+  },
+  {
+    id: 'inanimate-subject',
+    category: '主体を隠す書き方',
+    severity: 'severe',
+    pattern: /醸成|プロセスが定着|事例が残した/u,
+    good: '誰が何をしたかを主語にして書く。例:「チームが毎週レビュー会を開くようになった」',
+  },
+  {
+    id: 'filler-preface',
+    category: '前置き',
+    severity: 'severe',
+    pattern:
+      /正直に言うと|避けたいのは|注目すべきは|面白いのはここ|というわけです/u,
+    good: '前置きを削り、主張を主文で書く。例:「避けたいのは再試行の重複です」→「再試行を重複させない設定にします」',
+  },
+  {
+    // 「愛すべき」は評価の慣用表現なので外す
+    id: 'stiff-phrase',
+    category: '硬い言い方',
+    severity: 'severe',
+    pattern: /(?<!愛)すべき|すべく|とみなし|の要点/u,
+    good: '行う動作や条件を平易に書く。例:「確認すべき設定」→「確認が必要な設定」、「改善すべく」→「改善するために」、「とみなし」→「とみて」',
+  },
+  {
+    id: 'double-negation',
+    category: '二重否定',
+    severity: 'severe',
+    pattern: /ないわけでは(?:ない|ありません)/u,
+    good: '成り立つ条件を肯定文で書く。例:「Edge Runtime でも、fs を使わない関数は動きます」',
+  },
+  {
+    id: 'redundant-approx',
+    category: '重言',
+    severity: 'warning',
+    pattern: /約 ?\d[\d,.]*[^。\d]{0,4}くらい/u,
+    good: '「約」か「くらい」の片方だけを書く。例:「約 20 件」',
+  },
+  {
+    // 「前回は」「前回の記事」は ai-words.json が検出する。§ は形態素の
+    // 並びで書けないためここに残す
+    id: 'relative-reference',
+    category: '相対参照',
+    severity: 'warning',
+    pattern: /§ ?\d/u,
+    good: '節を番号でなく見出しへのリンクで参照する。例:「[キャッシュの有効期間](#キャッシュの有効期間)で説明します」',
+  },
+  {
+    id: 'version-yori',
+    category: '起点の「より」',
+    severity: 'warning',
+    pattern: /\d+(?:\.\d+)* ?より(?:対応|提供|利用|適用|導入)/u,
+    good: '時間や版の起点には「から」を使う。例:「v3 から対応」',
   },
 ] as const satisfies readonly WordRule[];
 
@@ -508,7 +460,32 @@ export const documentRules = {
     threshold: 1,
     good: '見出しは題目の名前にする。例:「この設計もまた同じ方向を指している」→「この設計の位置づけ」',
   },
+  // 「一部」「適宜」「別途」は本人も 1 語ずつなら使うため語の規則にはしない。
+  // 同じ段落に集まった時だけ、対象と変更内容が抜けた文章として報告する
+  'vague-density': {
+    category: '曖昧な語の集中',
+    severity: 'warning',
+    threshold: 3,
+    good: '誰が、何を、どう変えたかと、その結果を書く。例:「必要な対応を進めます」→「承認担当者への連絡を自動通知に変更します」',
+  },
 } as const satisfies Record<string, DocumentRule>;
+
+// 「など」「かなり」は本人の入力に 237 回と 67 回出てくる。数えると、本人の
+// 段落が閾値を超えるため外している
+export const vaguePatterns = [
+  /一部(?:を|の)?(?:変更|修正|見直|調整)/gu,
+  /状況に応じて/gu,
+  /必要な(?:対応|措置|調整)/gu,
+  /適宜/gu,
+  /別途/gu,
+  /関係者/gu,
+  /見込み/gu,
+  /^(?:これにより|これで|この結果)/gu,
+  /今後は/gu,
+  /しばらく/gu,
+  /早めに/gu,
+  /多め/gu,
+] as const;
 
 // 回数だけで判定すると長い文書ほど当たりやすい。密度が薄いうちは人間の修辞と
 // 区別がつかないため、地の文に対する比率も条件にする
