@@ -5,7 +5,6 @@
   "syncClaudeAiPlugins": false,
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
-    "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS": "1",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
     "CLAUDE_CODE_NEW_INIT": "1",
     "CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL": "1",
@@ -111,6 +110,10 @@
           {
             "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-post-tool-use.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/style-check.ts"
           }
         ]
       },
@@ -200,6 +203,14 @@
           {
             "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/japanese-guard.ts"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/style-check-stop.ts"
           }
         ]
       }
