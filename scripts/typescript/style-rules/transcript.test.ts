@@ -37,10 +37,7 @@ function assistant(text: string, extra: Record<string, unknown> = {}) {
 
 async function writeTranscript(entries: unknown[]): Promise<string> {
   const path = join(workspace, 'transcript.jsonl');
-  await Bun.write(
-    path,
-    entries.map((entry) => JSON.stringify(entry)).join('\n'),
-  );
+  await Bun.write(path, entries.map((entry) => JSON.stringify(entry)).join('\n'));
   return path;
 }
 

@@ -37,16 +37,7 @@ function loadLinter(): Promise<Linter> {
   return linterPromise;
 }
 
-const CODE_EXTENSIONS = new Set([
-  '.js',
-  '.jsx',
-  '.mjs',
-  '.cjs',
-  '.ts',
-  '.tsx',
-  '.mts',
-  '.cts',
-]);
+const CODE_EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts']);
 
 function isTarget(filePath: string): boolean {
   const ext = extname(filePath).toLowerCase();
@@ -109,10 +100,7 @@ export function introducedFindings(
 function formatReport(filePath: string, findings: TextlintFinding[]): string {
   const details = findings
     .slice(0, MAX_REPORTED_FINDINGS)
-    .map(
-      ({ line, column, ruleId, message }) =>
-        `- ${line}:${column} ${message} (${ruleId})`,
-    );
+    .map(({ line, column, ruleId, message }) => `- ${line}:${column} ${message} (${ruleId})`);
   const omitted = findings.length - details.length;
   if (omitted > 0) {
     details.push(`- ほか ${omitted} 件`);
@@ -154,12 +142,7 @@ const hook = defineHook({
       // Edit は書き込み後の本文から逆向きに置換して編集前を復元し、差分だけを見る。
       let beforeText: string | undefined;
       if (!('content' in input)) {
-        beforeText = applyEdit(
-          afterText,
-          input.new_string,
-          input.old_string,
-          input.replace_all,
-        );
+        beforeText = applyEdit(afterText, input.new_string, input.old_string, input.replace_all);
         if (beforeText === undefined) {
           // 復元できない置換は差分を判定できないため、誤検出を避けて何もしない。
           return context.success();
@@ -173,11 +156,8 @@ const hook = defineHook({
         : filePath;
       const linter = await loadLinter();
       const beforeFindings =
-        beforeText === undefined
-          ? []
-          : (await linter.lintText(beforeText, lintPath)).messages;
-      const afterFindings = (await linter.lintText(afterText, lintPath))
-        .messages;
+        beforeText === undefined ? [] : (await linter.lintText(beforeText, lintPath)).messages;
+      const afterFindings = (await linter.lintText(afterText, lintPath)).messages;
       const introduced = introducedFindings(beforeFindings, afterFindings);
 
       if (introduced.length === 0) {
@@ -196,9 +176,7 @@ const hook = defineHook({
     } catch (error) {
       const detail = errorText(error);
       process.stderr.write(`[textlint-post-tool-use] ${detail}\n`);
-      return context.nonBlockingError(
-        `textlint を実行できませんでした: ${detail}`,
-      );
+      return context.nonBlockingError(`textlint を実行できませんでした: ${detail}`);
     }
   },
 });

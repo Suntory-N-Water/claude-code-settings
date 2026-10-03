@@ -6,10 +6,8 @@ const MAX_GROUPS = 8;
 const SEVERITY_LABEL = { severe: 'error', warning: 'warning' } as const;
 
 // 語だけ置き換えると別の語形で同じ問題が残り、文が壊れる。丸ごと書き直させる
-const REWRITE_INSTRUCTION =
-  '該当文を丸ごと書き直す。検出語だけの同義語置換は禁止。';
-const SEVERITY_INSTRUCTION =
-  'error は修正必須(未修正だとターンを終了できない)、warning は任意。';
+const REWRITE_INSTRUCTION = '該当文を丸ごと書き直す。検出語だけの同義語置換は禁止。';
+const SEVERITY_INSTRUCTION = 'error は修正必須(未修正だとターンを終了できない)、warning は任意。';
 const REPEATED_GOOD = '上と同じ';
 
 interface Hit {
@@ -73,10 +71,7 @@ function formatGroup(group: Group): string {
   ].join('\n');
 }
 
-export function formatReport(
-  filePath: string,
-  violations: Violation[],
-): string {
+export function formatReport(filePath: string, violations: Violation[]): string {
   const groups = groupBySentence(violations);
   const ordered = [
     ...groups.filter((group) => group.severity === 'severe'),
@@ -98,14 +93,8 @@ export function formatReport(
   return lines.join('\n');
 }
 
-export function formatStopReport(
-  entries: { filePath: string; sentences: string[] }[],
-): string {
-  const lines = [
-    'style-check: error が未修正のまま残っています。',
-    REWRITE_INSTRUCTION,
-    '',
-  ];
+export function formatStopReport(entries: { filePath: string; sentences: string[] }[]): string {
+  const lines = ['style-check: error が未修正のまま残っています。', REWRITE_INSTRUCTION, ''];
   for (const entry of entries) {
     lines.push(entry.filePath);
     for (const sentence of entry.sentences) {

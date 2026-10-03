@@ -7,10 +7,7 @@ const ROOT = dirname(dirname(import.meta.dir));
 const MAX_REPORTED_FINDINGS = 8;
 const JAPANESE = /[ぁ-んァ-ヶ一-龠]/u;
 
-type TextlintFinding = Pick<
-  TextlintResult['messages'][number],
-  'ruleId' | 'message'
->;
+type TextlintFinding = Pick<TextlintResult['messages'][number], 'ruleId' | 'message'>;
 
 type Linter = {
   lintText(text: string, filePath: string): Promise<TextlintResult>;
@@ -74,10 +71,7 @@ const hook = defineHook({
       const linter = await loadLinter();
       // 返答は Markdown として表示される。拡張子で Markdown プロセッサに寄せると
       // コードブロックとインラインコードが検査対象から外れる
-      const { messages } = await linter.lintText(
-        text,
-        join(ROOT, 'assistant-message.md'),
-      );
+      const { messages } = await linter.lintText(text, join(ROOT, 'assistant-message.md'));
       if (messages.length === 0) {
         return context.success();
       }

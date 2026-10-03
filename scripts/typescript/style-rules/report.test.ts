@@ -73,7 +73,10 @@ describe('差し戻しの文面', () => {
   // });
 
   test('同じ規則が別の文に当たると、2 度目の書き直し方が省かれること', () => {
-    const second: Violation = { ...warning, sentence: 'あの関数の契約も決める。' };
+    const second: Violation = {
+      ...warning,
+      sentence: 'あの関数の契約も決める。',
+    };
 
     const report = formatReport('/a/b.md', [warning, second]);
 
@@ -104,9 +107,7 @@ describe('差し戻しの文面', () => {
 
 describe('ターン終了時の文面', () => {
   test('ファイルごとの該当文が並ぶこと', () => {
-    const report = formatStopReport([
-      { filePath: '/a/b.md', sentences: [severe.sentence] },
-    ]);
+    const report = formatStopReport([{ filePath: '/a/b.md', sentences: [severe.sentence] }]);
 
     expect(report).toContain('/a/b.md');
     expect(report).toContain(`  ${severe.sentence}`);

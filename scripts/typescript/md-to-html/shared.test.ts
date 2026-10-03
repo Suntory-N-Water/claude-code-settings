@@ -22,9 +22,7 @@ function createAnnotation(overrides: Partial<Annotation> = {}): Annotation {
   };
 }
 
-function createEntry(
-  overrides: Partial<UnresolvedEntry> = {},
-): UnresolvedEntry {
+function createEntry(overrides: Partial<UnresolvedEntry> = {}): UnresolvedEntry {
   return {
     commentsPath: COMMENTS_PATH,
     sourcePath: SOURCE_PATH,
@@ -34,9 +32,7 @@ function createEntry(
   };
 }
 
-function createReport(
-  overrides: Partial<UnresolvedReport> = {},
-): UnresolvedReport {
+function createReport(overrides: Partial<UnresolvedReport> = {}): UnresolvedReport {
   return {
     entries: [],
     outOfScopeCount: 0,
@@ -50,13 +46,7 @@ function createReport(
 // 状態によって変わる構造だけにする
 describe('未対応コメントの提示', () => {
   it('対象 Markdown のパスと行番号が添えられること', () => {
-    const markdown = [
-      '# タイトル',
-      '',
-      '本文の説明です。',
-      '',
-      '重要な指摘事項です。',
-    ].join('\n');
+    const markdown = ['# タイトル', '', '本文の説明です。', '', '重要な指摘事項です。'].join('\n');
     const annotation = createAnnotation({ exact: '重要な指摘事項です' });
     const entry = createEntry({ markdown, annotations: [annotation] });
     const report = createReport({ entries: [entry] });
@@ -196,10 +186,7 @@ describe('未対応コメントの提示', () => {
 describe('編集で壊れたコメントの提示', () => {
   it('壊れた件数が伝えられること', () => {
     const entry = createEntry({
-      annotations: [
-        createAnnotation({ id: 'a' }),
-        createAnnotation({ id: 'b' }),
-      ],
+      annotations: [createAnnotation({ id: 'a' }), createAnnotation({ id: 'b' })],
     });
 
     const result = formatBrokenAnchors(entry);

@@ -75,9 +75,7 @@ function sanitizeLines(source: string): SanitizedLine[] {
 
   // 先頭のフロントマターだけを飛ばす。本文中の `---` は水平線なので対象外
   if (lines[0]?.trim() === '---') {
-    const end = lines.findIndex(
-      (line, index) => index > 0 && line.trim() === '---',
-    );
+    const end = lines.findIndex((line, index) => index > 0 && line.trim() === '---');
     cursor = end === -1 ? lines.length : end + 1;
   }
 

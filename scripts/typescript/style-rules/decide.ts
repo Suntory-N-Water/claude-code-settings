@@ -39,9 +39,7 @@ export interface StopInput {
 // 語レベルと違い文書レベルの判定はファイル全体を見るため、無関係な箇所を
 // 編集しても同じ指摘が当たり続ける。error は Stop hook で追うので対象外
 function suppressible(violation: Violation): boolean {
-  return (
-    violation.severity === 'warning' && isFileScopedRuleId(violation.ruleId)
-  );
+  return violation.severity === 'warning' && isFileScopedRuleId(violation.ruleId);
 }
 
 // 件数を含む matched は文を足すたび変わる。対象文が変われば sentence も変わる
@@ -57,19 +55,13 @@ async function dropReported(
   warnings: WarningStore,
 ): Promise<Violation[]> {
   const entries = await warnings.read(input.sessionId);
-  const reported = new Set(
-    entries.find((entry) => entry.filePath === input.filePath)?.keys ?? [],
-  );
+  const reported = new Set(entries.find((entry) => entry.filePath === input.filePath)?.keys ?? []);
   const keys = [...new Set(violations.filter(suppressible).map(warningKey))];
   if (keys.length !== reported.size || keys.some((key) => !reported.has(key))) {
-    await warnings.write(
-      input.sessionId,
-      replaceKeys(entries, input.filePath, keys),
-    );
+    await warnings.write(input.sessionId, replaceKeys(entries, input.filePath, keys));
   }
   return violations.filter(
-    (violation) =>
-      !suppressible(violation) || !reported.has(warningKey(violation)),
+    (violation) => !suppressible(violation) || !reported.has(warningKey(violation)),
   );
 }
 
@@ -81,9 +73,7 @@ async function inspectWrite(
   if (extname(input.filePath).toLowerCase() !== TARGET_EXTENSION) {
     return undefined;
   }
-  if (
-    EXCLUDED_PATH_SEGMENTS.some((segment) => input.filePath.includes(segment))
-  ) {
+  if (EXCLUDED_PATH_SEGMENTS.some((segment) => input.filePath.includes(segment))) {
     return undefined;
   }
   const file = Bun.file(input.filePath);
@@ -115,26 +105,17 @@ async function inspectWrite(
 
 // PostToolUse で記録した該当文がまだファイルに残っているかだけを見る。
 // 書き直されれば文ごと消えるので、再検査せずに解消を判定できる
-async function unresolved(
-  entry: StoredEntry,
-): Promise<StoredEntry | undefined> {
+async function unresolved(entry: StoredEntry): Promise<StoredEntry | undefined> {
   const file = Bun.file(entry.filePath);
   if (!(await file.exists())) {
     return undefined;
   }
-  const current = new Set(
-    toSentences(await file.text()).map((sentence) => sentence.text),
-  );
+  const current = new Set(toSentences(await file.text()).map((sentence) => sentence.text));
   const sentences = entry.sentences.filter((sentence) => current.has(sentence));
-  return sentences.length === 0
-    ? undefined
-    : { filePath: entry.filePath, sentences };
+  return sentences.length === 0 ? undefined : { filePath: entry.filePath, sentences };
 }
 
-async function inspectStop(
-  input: StopInput,
-  store: SessionStore,
-): Promise<string | undefined> {
+async function inspectStop(input: StopInput, store: SessionStore): Promise<string | undefined> {
   const entries = await store.read(input.sessionId);
   if (entries.length === 0) {
     return undefined;
@@ -161,9 +142,7 @@ async function quiet(
   try {
     return await inspect();
   } catch (err) {
-    process.stderr.write(
-      `[${label}] ${err instanceof Error ? err.message : String(err)}\n`,
-    );
+    process.stderr.write(`[${label}] ${err instanceof Error ? err.message : String(err)}\n`);
     return undefined;
   }
 }

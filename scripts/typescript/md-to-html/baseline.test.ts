@@ -8,11 +8,7 @@ import {
   pendingPathForHtml,
   readBaseline,
 } from './baseline.ts';
-import {
-  commentsPathForHtml,
-  OUTPUT_ROOT,
-  writeCommentsFile,
-} from './shared.ts';
+import { commentsPathForHtml, OUTPUT_ROOT, writeCommentsFile } from './shared.ts';
 
 const TEST_DIR = join(OUTPUT_ROOT, '__baseline_test__');
 
@@ -115,10 +111,7 @@ describe('差分の基準', () => {
 
     it('front matter は基準に含めないこと', async () => {
       const htmlPath = htmlPathFor('doc');
-      const sourcePath = await writeSource(
-        'doc',
-        '---\ntitle: "テスト"\n---\n本文のみ',
-      );
+      const sourcePath = await writeSource('doc', '---\ntitle: "テスト"\n---\n本文のみ');
       await writeSourceComments(htmlPath, sourcePath);
       await markPending(htmlPath);
 
@@ -138,10 +131,7 @@ describe('差分の基準', () => {
 
     it('対象 Markdown が存在しない場合でも、他のドキュメントの基準は進むこと', async () => {
       const missingHtmlPath = htmlPathFor('missing');
-      await writeSourceComments(
-        missingHtmlPath,
-        join(TEST_DIR, 'missing-source.md'),
-      );
+      await writeSourceComments(missingHtmlPath, join(TEST_DIR, 'missing-source.md'));
       await markPending(missingHtmlPath);
       const otherHtmlPath = htmlPathFor('other');
       const otherSourcePath = await writeSource('other', '進んだ本文');

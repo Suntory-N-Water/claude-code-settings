@@ -41,17 +41,11 @@ const hitCases = {
   'ai-texture': ['この設計には手触りがある。', '手触り'],
   'ai-grandiose': ['そこには残酷な真理がある。', '真理'],
   'translationese-verb': ['この結果は限界を示唆する。', '示唆'],
-  'translationese-frame': [
-    'この方式は速度という点で優れている。',
-    'という点で',
-  ],
+  'translationese-frame': ['この方式は速度という点で優れている。', 'という点で'],
   'katakana-jargon': ['既存の資産にレバレッジをかける。', 'レバレッジ'],
   'cliche-closing': ['いかがでしたか。', 'いかがでした'],
   'structure-preview': ['3 つの観点から説明する。', 'つの観点から'],
-  'conclusion-dodge': [
-    'この判断はケースバイケースである。',
-    'ケースバイケース',
-  ],
+  'conclusion-dodge': ['この判断はケースバイケースである。', 'ケースバイケース'],
   'weak-negation': ['この書き方はあまり推奨されない。', 'あまり推奨され'],
   'disclaimer-ritual': ['これはあくまで一例である。', 'あくまで一例'],
   'academic-self': ['本稿では設定を扱う。', '本稿'],
@@ -69,10 +63,7 @@ const hitCases = {
   'inanimate-subject': ['レビューの文化が醸成された。', '醸成'],
   'filler-preface': ['避けたいのは再試行の重複です。', '避けたいのは'],
   'stiff-phrase': ['確認すべき設定を挙げる。', 'すべき'],
-  'double-negation': [
-    'Edge Runtime で使えないわけではありません。',
-    'ないわけではありません',
-  ],
+  'double-negation': ['Edge Runtime で使えないわけではありません。', 'ないわけではありません'],
   'redundant-approx': ['約 20 件くらいある。', '約 20 件くらい'],
   'relative-reference': ['詳細は §3 で説明する。', '§3'],
   'version-yori': ['この機能は v3 より対応している。', '3 より対応'],
@@ -168,10 +159,9 @@ describe('語のルール', () => {
   });
 
   test('禁止語を含まない地の文からは、語の指摘が出ないこと', async () => {
-    const source = [
-      'この関数は設定ファイルを読み込む。',
-      '見つからない場合は既定値を返す。',
-    ].join('\n');
+    const source = ['この関数は設定ファイルを読み込む。', '見つからない場合は既定値を返す。'].join(
+      '\n',
+    );
 
     const violations = await check(source);
 
@@ -199,11 +189,9 @@ describe('語のルール', () => {
   });
 
   test('同じ severe が 3 文に当たる時、打ち切らずに全て報告すること', async () => {
-    const source = [
-      '型定義は鍵となる。',
-      '設定ファイルは鍵となる。',
-      '疎通確認は鍵となる。',
-    ].join('\n\n');
+    const source = ['型定義は鍵となる。', '設定ファイルは鍵となる。', '疎通確認は鍵となる。'].join(
+      '\n\n',
+    );
 
     const violations = await check(source);
 
@@ -225,12 +213,7 @@ describe('語のルール', () => {
 
 describe('検査しない箇所', () => {
   test('コードブロックの中に禁止語があっても検出しないこと', async () => {
-    const source = [
-      '本文です。',
-      '```ts',
-      'const label = "鍵となる";',
-      '```',
-    ].join('\n');
+    const source = ['本文です。', '```ts', 'const label = "鍵となる";', '```'].join('\n');
 
     const violations = await check(source);
 
@@ -280,9 +263,7 @@ describe('検査しない箇所', () => {
   });
 
   test('日本語を含まないファイルは検査しないこと', async () => {
-    const source = ['# Setup', '', 'Run the installer — then reboot.'].join(
-      '\n',
-    );
+    const source = ['# Setup', '', 'Run the installer — then reboot.'].join('\n');
 
     const violations = await check(source);
 
@@ -306,11 +287,7 @@ describe('書いた範囲での絞り込み', () => {
   });
 
   test('文書全体の集計は差し替えた断片で絞り込まないこと', async () => {
-    const polite = [
-      '設定を検索します。',
-      '結果を保存します。',
-      '一覧を表示します。',
-    ].join('\n');
+    const polite = ['設定を検索します。', '結果を保存します。', '一覧を表示します。'].join('\n');
 
     const violations = await check(polite, '一覧を表示します。');
 
@@ -320,11 +297,7 @@ describe('書いた範囲での絞り込み', () => {
 
 describe('文末の重複', () => {
   test('敬体の同じ文末が 3 文続いた時、連続した文が示されること', async () => {
-    const source = [
-      '設定を検索します。',
-      '結果を保存します。',
-      '一覧を表示します。',
-    ].join('\n');
+    const source = ['設定を検索します。', '結果を保存します。', '一覧を表示します。'].join('\n');
 
     const violations = await check(source);
 
@@ -342,11 +315,9 @@ describe('文末の重複', () => {
   });
 
   test('箇条書きの行は文末の連続に数えないこと', async () => {
-    const source = [
-      '- 設定を検索します。',
-      '- 結果を保存します。',
-      '- 一覧を表示します。',
-    ].join('\n');
+    const source = ['- 設定を検索します。', '- 結果を保存します。', '- 一覧を表示します。'].join(
+      '\n',
+    );
 
     const violations = await check(source);
 
@@ -354,11 +325,7 @@ describe('文末の重複', () => {
   });
 
   test('常体の同じ文末が続いても指摘されないこと', async () => {
-    const source = [
-      '設定を検索する。',
-      '結果を保存する。',
-      '一覧を表示する。',
-    ].join('\n');
+    const source = ['設定を検索する。', '結果を保存する。', '一覧を表示する。'].join('\n');
 
     const violations = await check(source);
 
@@ -368,11 +335,7 @@ describe('文末の重複', () => {
 
 describe('敬体と常体の混在', () => {
   test('敬体と常体が混ざる時、少ない方の文が示されること', async () => {
-    const source = [
-      '設定を検索します。',
-      '結果を保存する。',
-      '一覧を表示する。',
-    ].join('\n');
+    const source = ['設定を検索します。', '結果を保存する。', '一覧を表示する。'].join('\n');
 
     const violations = await check(source);
 
@@ -447,8 +410,7 @@ describe('曖昧な語の集中', () => {
   });
 
   test('「など」「かなり」は数えないこと', async () => {
-    const source =
-      '設定などを一部変更しました。かなり速くなりました。詳細は別途共有します。';
+    const source = '設定などを一部変更しました。かなり速くなりました。詳細は別途共有します。';
 
     const violations = await check(source);
 
@@ -486,9 +448,7 @@ describe('対句の多用', () => {
 
     const violations = await check(source);
 
-    expect(ofRule(violations, 'dewanaku-overuse')[0]?.matched).toContain(
-      '3 回',
-    );
+    expect(ofRule(violations, 'dewanaku-overuse')[0]?.matched).toContain('3 回');
   });
 
   test('回数が閾値に達しても、地の文に対する比率が薄い時は指摘されないこと', async () => {
@@ -506,18 +466,11 @@ describe('対句の多用', () => {
 
     const violations = await check(source);
 
-    expect(ofRule(violations, 'dewanaku-overuse')[0]?.matched).toContain(
-      '4 回',
-    );
+    expect(ofRule(violations, 'dewanaku-overuse')[0]?.matched).toContain('4 回');
   });
 
   test('見出し・箇条書き・表・引用の「ではなく」は数えないこと', async () => {
-    const source = [
-      `# ${line(1)}`,
-      `- ${line(2)}`,
-      `| ${line(3)} |`,
-      `> ${line(4)}`,
-    ].join('\n');
+    const source = [`# ${line(1)}`, `- ${line(2)}`, `| ${line(3)} |`, `> ${line(4)}`].join('\n');
 
     const violations = await check(source);
 
@@ -529,9 +482,7 @@ describe('体言止め', () => {
   test('地の文が名詞で終わる時、該当文が示されること', async () => {
     const violations = await check('原因はロックの競合。');
 
-    expect(ofRule(violations, 'taigendome')[0]?.sentence).toBe(
-      '原因はロックの競合。',
-    );
+    expect(ofRule(violations, 'taigendome')[0]?.sentence).toBe('原因はロックの競合。');
   });
 
   test('述語で言い切る文は指摘されないこと', async () => {
@@ -549,23 +500,15 @@ describe('体言止め', () => {
 
 describe('重大度', () => {
   test('重大なルールに当たった文だけが重大として取り出せること', async () => {
-    const source = ['型定義は鍵となる。', 'この関数の契約を決める。'].join(
-      '\n',
-    );
+    const source = ['型定義は鍵となる。', 'この関数の契約を決める。'].join('\n');
 
     const severe = severeViolations(await check(source));
 
-    expect(severe.map((violation) => violation.sentence)).toEqual([
-      '型定義は鍵となる。',
-    ]);
+    expect(severe.map((violation) => violation.sentence)).toEqual(['型定義は鍵となる。']);
   });
 
   test('文書全体の集計は重大にならないこと', async () => {
-    const source = [
-      '設定を検索します。',
-      '結果を保存します。',
-      '一覧を表示します。',
-    ].join('\n');
+    const source = ['設定を検索します。', '結果を保存します。', '一覧を表示します。'].join('\n');
 
     const severe = severeViolations(await check(source));
 
@@ -585,9 +528,7 @@ describe('見出しの形', () => {
   test('見出しが疑問で終わる時、該当見出しが示されること', async () => {
     const violations = await check('# なぜこの方式を選んだのか');
 
-    expect(ofRule(violations, 'heading-proposition')[0]?.sentence).toBe(
-      'なぜこの方式を選んだのか',
-    );
+    expect(ofRule(violations, 'heading-proposition')[0]?.sentence).toBe('なぜこの方式を選んだのか');
   });
 
   test('見出しが名詞で終わる時、指摘されないこと', async () => {

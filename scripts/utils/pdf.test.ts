@@ -4,10 +4,7 @@ import { type PdfLine, pdfLinesToMarkdown } from './pdf';
 const PAGE_HEIGHT = 800;
 const FULL_RIGHT = 500;
 
-function line(
-  text: string,
-  overrides: Partial<Omit<PdfLine, 'text'>> = {},
-): PdfLine {
+function line(text: string, overrides: Partial<Omit<PdfLine, 'text'>> = {}): PdfLine {
   const top = overrides.top ?? 100;
   const size = overrides.size ?? 10;
   return {
@@ -48,10 +45,7 @@ describe('PDF の行を Markdown に変換する', () => {
     ])('%s をつなぐとき、読める文としてつながること', (_, first, second, expected) => {
       // Arrange
       const sut = pdfLinesToMarkdown;
-      const lines = [
-        line(first, { top: 100 }),
-        line(second, { top: 120, right: 200 }),
-      ];
+      const lines = [line(first, { top: 100 }), line(second, { top: 120, right: 200 })];
 
       // Act
       const result = sut(lines);
@@ -124,9 +118,7 @@ describe('PDF の行を Markdown に変換する', () => {
       const result = sut(lines);
 
       // Assert
-      expect(result).toBe(
-        '要旨の段落はここで終わる。\n\n次の段落はここから始まる\n\n・本文',
-      );
+      expect(result).toBe('要旨の段落はここで終わる。\n\n次の段落はここから始まる\n\n・本文');
     });
   });
 
@@ -160,9 +152,7 @@ describe('PDF の行を Markdown に変換する', () => {
 
       // Assert
       expect(result).toBe(
-        [0, 1, 2, 3]
-          .map((page) => `公用文作成の考え方\n\n本文${page}`)
-          .join('\n\n'),
+        [0, 1, 2, 3].map((page) => `公用文作成の考え方\n\n本文${page}`).join('\n\n'),
       );
     });
 
@@ -260,9 +250,7 @@ describe('PDF の行を Markdown に変換する', () => {
   it('本文が 1 行だけのページが続くとき、各ページの行が別々の段落になること', () => {
     // Arrange
     const sut = pdfLinesToMarkdown;
-    const lines = [0, 1, 2].map((page) =>
-      line(`本文${page}`, { page, top: 100, right: 150 }),
-    );
+    const lines = [0, 1, 2].map((page) => line(`本文${page}`, { page, top: 100, right: 150 }));
 
     // Act
     const result = sut(lines);

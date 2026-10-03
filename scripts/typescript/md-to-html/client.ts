@@ -147,8 +147,7 @@ function setupPanels(tocAvailable: boolean): (showDiff: boolean) => void {
 
 // htmldiff は ins/del をインラインに散らすため、ブロック要素単位に
 // まとめて「変更箇所」として一覧化する
-const DIFF_BLOCK_SELECTOR =
-  'p, li, h1, h2, h3, h4, h5, h6, pre, blockquote, td, th';
+const DIFF_BLOCK_SELECTOR = 'p, li, h1, h2, h3, h4, h5, h6, pre, blockquote, td, th';
 
 function diffKind(block: Element): 'ins' | 'del' | 'mixed' {
   const hasIns = block.matches('ins') || block.querySelector('ins') !== null;
@@ -203,10 +202,7 @@ function setupDiffNav(): void {
   nav.append(list);
 }
 
-function setupDiffToggle(
-  tocAvailable: boolean,
-  setDiffMode: (showDiff: boolean) => void,
-): void {
+function setupDiffToggle(tocAvailable: boolean, setDiffMode: (showDiff: boolean) => void): void {
   const diff = document.getElementById('diff');
   const contentBtn = document.getElementById('view-content-btn');
   const diffBtn = document.getElementById('view-diff-btn');
@@ -262,9 +258,7 @@ async function renderMermaid(): Promise<void> {
     };
     loaded.default.initialize({
       startOnLoad: false,
-      theme: window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'default',
+      theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
     });
     await loaded.default.run({ nodes });
   } catch (err) {
@@ -295,19 +289,11 @@ function contentText(): string {
 
 function selectorFromSelection(): Selector | undefined {
   const selection = window.getSelection();
-  if (
-    !content ||
-    !selection ||
-    selection.isCollapsed ||
-    selection.rangeCount === 0
-  ) {
+  if (!content || !selection || selection.isCollapsed || selection.rangeCount === 0) {
     return undefined;
   }
   const range = selection.getRangeAt(0);
-  if (
-    !content.contains(range.startContainer) ||
-    !content.contains(range.endContainer)
-  ) {
+  if (!content.contains(range.startContainer) || !content.contains(range.endContainer)) {
     return undefined;
   }
   // 本文先頭から選択開始位置までの Range を作ると、その文字列長が
@@ -324,10 +310,7 @@ function selectorFromSelection(): Selector | undefined {
   return {
     exact,
     prefix: docText.slice(Math.max(0, start - CONTEXT_LENGTH), start),
-    suffix: docText.slice(
-      start + exact.length,
-      start + exact.length + CONTEXT_LENGTH,
-    ),
+    suffix: docText.slice(start + exact.length, start + exact.length + CONTEXT_LENGTH),
   };
 }
 
@@ -368,18 +351,11 @@ function locateAnnotation(annotation: Annotation, docText: string): number {
   let best = first;
   let bestScore = -1;
   for (const candidate of candidates) {
-    const prefix = docText.slice(
-      Math.max(0, candidate - annotation.prefix.length),
-      candidate,
-    );
+    const prefix = docText.slice(Math.max(0, candidate - annotation.prefix.length), candidate);
     const suffixStart = candidate + annotation.exact.length;
-    const suffix = docText.slice(
-      suffixStart,
-      suffixStart + annotation.suffix.length,
-    );
+    const suffix = docText.slice(suffixStart, suffixStart + annotation.suffix.length);
     const score =
-      commonSuffixLength(prefix, annotation.prefix) +
-      commonPrefixLength(suffix, annotation.suffix);
+      commonSuffixLength(prefix, annotation.prefix) + commonPrefixLength(suffix, annotation.suffix);
     if (score > bestScore) {
       bestScore = score;
       best = candidate;
@@ -388,12 +364,7 @@ function locateAnnotation(annotation: Annotation, docText: string): number {
   return best;
 }
 
-function wrapTextSlice(
-  node: Text,
-  start: number,
-  end: number,
-  id: string,
-): void {
+function wrapTextSlice(node: Text, start: number, end: number, id: string): void {
   if (start >= end) {
     return;
   }
@@ -437,9 +408,7 @@ function clearHighlights(): void {
   if (!content) {
     return;
   }
-  for (const mark of Array.from(
-    content.querySelectorAll('mark.annotation-mark'),
-  )) {
+  for (const mark of Array.from(content.querySelectorAll('mark.annotation-mark'))) {
     const parent = mark.parentNode;
     if (!parent) {
       continue;
@@ -459,9 +428,7 @@ function selectAnnotation(id: string): void {
       card instanceof HTMLElement && card.dataset.annotationId === id,
     );
   }
-  for (const mark of Array.from(
-    document.querySelectorAll('mark.annotation-mark'),
-  )) {
+  for (const mark of Array.from(document.querySelectorAll('mark.annotation-mark'))) {
     mark.classList.toggle(
       'selected',
       mark instanceof HTMLElement && mark.dataset.annotationId === id,
@@ -470,16 +437,11 @@ function selectAnnotation(id: string): void {
 }
 
 function scrollToMark(id: string): void {
-  const mark = document.querySelector(
-    `mark.annotation-mark[data-annotation-id="${id}"]`,
-  );
+  const mark = document.querySelector(`mark.annotation-mark[data-annotation-id="${id}"]`);
   mark?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-function renderCommentList(
-  annotations: Annotation[],
-  missingIds: Set<string>,
-): void {
+function renderCommentList(annotations: Annotation[], missingIds: Set<string>): void {
   if (!commentList) {
     return;
   }
@@ -494,9 +456,7 @@ function renderCommentList(
 
     const quote = document.createElement('blockquote');
     quote.textContent =
-      annotation.exact.length > 80
-        ? `${annotation.exact.slice(0, 80)}…`
-        : annotation.exact;
+      annotation.exact.length > 80 ? `${annotation.exact.slice(0, 80)}…` : annotation.exact;
 
     const body = document.createElement('p');
     body.textContent = annotation.comment;
@@ -542,10 +502,7 @@ async function fetchAnnotations(): Promise<Annotation[]> {
   return data.annotations ?? [];
 }
 
-async function createAnnotation(
-  selector: Selector,
-  comment: string,
-): Promise<void> {
+async function createAnnotation(selector: Selector, comment: string): Promise<void> {
   const res = await fetch(apiUrl(), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -579,9 +536,7 @@ async function reload(): Promise<void> {
   try {
     // resolved は Claude が対応済みにしたもの。一覧・ハイライトには出さず、
     // JSON からの削除はユーザー操作(ブラウザの削除ボタン)に委ねる
-    annotations = (await fetchAnnotations()).filter(
-      (annotation) => annotation.resolved !== true,
-    );
+    annotations = (await fetchAnnotations()).filter((annotation) => annotation.resolved !== true);
   } catch {
     note('コメントを読み込めませんでした(保存サーバが起動していません)');
     return;
@@ -608,11 +563,7 @@ async function reload(): Promise<void> {
     [...located.map((entry) => entry.annotation), ...missing],
     new Set(missing.map((entry) => entry.id)),
   );
-  note(
-    annotations.length === 0
-      ? '本文を範囲選択するとコメントを追加できます'
-      : '',
-  );
+  note(annotations.length === 0 ? '本文を範囲選択するとコメントを追加できます' : '');
 }
 
 let pendingSelector: Selector | undefined;
@@ -709,8 +660,7 @@ function setupSelectionUi(): void {
   document.addEventListener('mouseup', (event) => {
     if (
       event.target instanceof Node &&
-      (annotateButton.contains(event.target) ||
-        popover?.contains(event.target) === true)
+      (annotateButton.contains(event.target) || popover?.contains(event.target) === true)
     ) {
       return;
     }
@@ -751,10 +701,7 @@ setupDiffNav();
 const setDiffMode = setupPanels(tocAvailable);
 setupDiffToggle(tocAvailable, setDiffMode);
 if (location.protocol === 'file:') {
-  const features =
-    mermaidBlocks().length > 0
-      ? 'コメント機能と Mermaid 図の描画'
-      : 'コメント機能';
+  const features = mermaidBlocks().length > 0 ? 'コメント機能と Mermaid 図の描画' : 'コメント機能';
   note(
     `${features}は http://localhost 経由で開いたときのみ使えます。` +
       'Markdown を再変換すると localhost の URL が案内されます。',

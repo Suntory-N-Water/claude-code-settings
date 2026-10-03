@@ -36,10 +36,7 @@ interface JsonStore<Entry> {
   write(sessionId: string, entries: Entry[]): Promise<void>;
 }
 
-function createJsonStore<Entry>(
-  root: string,
-  suffix: string,
-): JsonStore<Entry> {
+function createJsonStore<Entry>(root: string, suffix: string): JsonStore<Entry> {
   const storePath = (sessionId: string): string =>
     join(root, `${sessionId.replaceAll('/', '-')}${suffix}`);
 
@@ -101,8 +98,7 @@ export function createReportedStore(root: string): ReportedStore {
 
 // プロセスを起動するテストから保存先を差し替えるために環境変数を見る
 export const storeRoot =
-  process.env.STYLE_CHECK_STORE_ROOT ??
-  join(homedir(), '.claude', 'style-check');
+  process.env.STYLE_CHECK_STORE_ROOT ?? join(homedir(), '.claude', 'style-check');
 
 export const sessionStore = createSessionStore(storeRoot);
 export const warningStore = createWarningStore(storeRoot);

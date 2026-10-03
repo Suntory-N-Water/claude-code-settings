@@ -55,11 +55,7 @@ describe('コメントの位置特定', () => {
     });
 
     it('引用の途中に強調がある場合、記号を含まない引用を返すこと', () => {
-      const markdown = [
-        '# タイトル',
-        '',
-        'これは **強調** を含む文章です。',
-      ].join('\n');
+      const markdown = ['# タイトル', '', 'これは **強調** を含む文章です。'].join('\n');
       const annotation = createAnnotation({
         exact: 'これは 強調 を含む文章です',
       });
@@ -87,11 +83,7 @@ describe('コメントの位置特定', () => {
     });
 
     it('引用の末尾の句読点まで含めて現在の本文から引用し直すこと', () => {
-      const markdown = [
-        '# タイトル',
-        '',
-        'これはテスト対象の文章です。続きの文。',
-      ].join('\n');
+      const markdown = ['# タイトル', '', 'これはテスト対象の文章です。続きの文。'].join('\n');
       const annotation = createAnnotation({
         exact: 'これはテスト対象の文章です',
       });
@@ -106,12 +98,7 @@ describe('コメントの位置特定', () => {
     });
 
     it('引用が複数行にまたがる場合、先頭行の行番号を返すこと', () => {
-      const markdown = [
-        '# タイトル',
-        '',
-        'これは一行目の文章で',
-        '二行目に続きます。',
-      ].join('\n');
+      const markdown = ['# タイトル', '', 'これは一行目の文章で', '二行目に続きます。'].join('\n');
       const annotation = createAnnotation({
         exact: '一行目の文章で二行目に続きます',
       });
@@ -170,11 +157,7 @@ describe('コメントの位置特定', () => {
 
   describe('コメントを書いた後に本文が変わったとき', () => {
     it('引用が変わっても前後の文脈が残っている場合、現在の該当箇所を返すこと', () => {
-      const markdown = [
-        '前の文脈です。',
-        '変更後の新しい文章です。',
-        '後の文脈です。',
-      ].join('\n');
+      const markdown = ['前の文脈です。', '変更後の新しい文章です。', '後の文脈です。'].join('\n');
       const annotation = createAnnotation({
         exact: '削除された古い文章です',
         prefix: '前の文脈です',

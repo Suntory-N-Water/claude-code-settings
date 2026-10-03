@@ -1,11 +1,6 @@
 import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import {
-  commentsPathForHtml,
-  OUTPUT_ROOT,
-  readCommentsFile,
-  splitFrontMatter,
-} from './shared.ts';
+import { commentsPathForHtml, OUTPUT_ROOT, readCommentsFile, splitFrontMatter } from './shared.ts';
 
 // 視覚差分の基準。編集のたびに基準を最新へ進めると、1 回の指示で複数箇所を
 // 直したときに最後の 1 箇所しか差分に残らない。基準を進めるのは次の指示が
@@ -18,9 +13,7 @@ export function pendingPathForHtml(htmlPath: string): string {
   return htmlPath.replace(/\.html$/, '.pending');
 }
 
-export async function readBaseline(
-  htmlPath: string,
-): Promise<string | undefined> {
+export async function readBaseline(htmlPath: string): Promise<string | undefined> {
   const file = Bun.file(baselinePathForHtml(htmlPath));
   return (await file.exists()) ? await file.text() : undefined;
 }
@@ -47,9 +40,7 @@ async function advanceOne(htmlPath: string): Promise<boolean> {
 
 // 前の指示の間に変換されたドキュメントの基準を、現在の本文まで進める。
 // root は走査の起点。テストから実際の出力先を書き換えずに済ませるための引数
-export async function advanceBaselines(
-  root: string = OUTPUT_ROOT,
-): Promise<number> {
+export async function advanceBaselines(root: string = OUTPUT_ROOT): Promise<number> {
   let advanced = 0;
   const glob = new Bun.Glob('**/*.pending');
   for await (const relPath of glob.scan({ cwd: root })) {

@@ -4,13 +4,7 @@ import { homedir } from 'node:os';
 import { defineHook, runHook } from 'cc-hooks-ts';
 import { join } from 'pathe';
 
-const RULE_PATH = join(
-  import.meta.dir,
-  '..',
-  '..',
-  'prompts',
-  'opus5-response-rule.md',
-);
+const RULE_PATH = join(import.meta.dir, '..', '..', 'prompts', 'opus5-response-rule.md');
 const SETTINGS_PATH = join(homedir(), '.claude', 'settings.json');
 
 // settings.json のモデルエイリアスは常に最新世代を指すため、Opus 5 とみなす
@@ -56,8 +50,7 @@ function detectOpus5(inputModel: string | undefined): Detection {
   }
 
   return {
-    isOpus5:
-      LATEST_OPUS_ALIASES.includes(configured) || isOpus5ModelId(configured),
+    isOpus5: LATEST_OPUS_ALIASES.includes(configured) || isOpus5ModelId(configured),
     source: `settings.model=${configured}`,
   };
 }
@@ -88,9 +81,7 @@ const hook = defineHook({
 
     const rule = readRule();
     if (rule === undefined) {
-      return c.nonBlockingError(
-        `[opus5-rule-inject] rule not found: ${RULE_PATH}`,
-      );
+      return c.nonBlockingError(`[opus5-rule-inject] rule not found: ${RULE_PATH}`);
     }
 
     return c.json({

@@ -15,10 +15,7 @@ function body(sentence: string): string {
   return sentence.replace(/[。！？]+$/, '');
 }
 
-function endingOf(
-  sentence: string,
-  endings: readonly string[],
-): string | undefined {
+function endingOf(sentence: string, endings: readonly string[]): string | undefined {
   const trimmed = body(sentence);
   return endings.find((ending) => trimmed.endsWith(ending));
 }
@@ -28,9 +25,7 @@ function headingSentences(sentences: Sentence[]): Sentence[] {
 }
 
 function proseSentences(sentences: Sentence[]): Sentence[] {
-  return sentences.filter(
-    (sentence) => sentence.kind === 'prose' && /[。]$/.test(sentence.text),
-  );
+  return sentences.filter((sentence) => sentence.kind === 'prose' && /[。]$/.test(sentence.text));
 }
 
 function checkEndingRepeat(prose: Sentence[]): Violation[] {
@@ -114,10 +109,7 @@ function antithesisCount(text: string): number {
 function checkDewanaku(prose: Sentence[]): Violation[] {
   const rule = documentRule('dewanaku-overuse');
   const hits = prose.filter((sentence) => antithesisCount(sentence.text) > 0);
-  const count = prose.reduce(
-    (total, sentence) => total + antithesisCount(sentence.text),
-    0,
-  );
+  const count = prose.reduce((total, sentence) => total + antithesisCount(sentence.text), 0);
   const ratio = prose.length === 0 ? 0 : count / prose.length;
   if (count < rule.threshold || ratio < antithesisRatioThreshold) {
     return [];
@@ -212,9 +204,7 @@ async function checkTaigendome(prose: Sentence[]): Promise<Violation[]> {
 // 自立動詞で終わる見出しは手順書として自然なので対象から外す
 const PREDICATE_HEAD_POS = new Set(['助動詞', '形容詞', '助詞']);
 
-async function checkHeadingProposition(
-  headings: Sentence[],
-): Promise<Violation[]> {
+async function checkHeadingProposition(headings: Sentence[]): Promise<Violation[]> {
   const rule = documentRule('heading-proposition');
   if (headings.length === 0) {
     return [];
@@ -226,8 +216,7 @@ async function checkHeadingProposition(
       return false;
     }
     return (
-      PREDICATE_HEAD_POS.has(last.pos) ||
-      (last.pos === '動詞' && last.pos_detail_1 === '非自立')
+      PREDICATE_HEAD_POS.has(last.pos) || (last.pos === '動詞' && last.pos_detail_1 === '非自立')
     );
   });
   if (hits.length < rule.threshold) {
@@ -243,9 +232,7 @@ async function checkHeadingProposition(
   }));
 }
 
-export async function checkDocument(
-  sentences: Sentence[],
-): Promise<Violation[]> {
+export async function checkDocument(sentences: Sentence[]): Promise<Violation[]> {
   const prose = proseSentences(sentences);
   const [taigendome, heading] = await Promise.all([
     checkTaigendome(prose),

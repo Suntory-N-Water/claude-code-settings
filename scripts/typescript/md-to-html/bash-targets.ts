@@ -128,21 +128,14 @@ function commandSubstitutionEnd(command: string, start: number): number {
 
 // ヒアドキュメントの本文はコマンドではなくデータなので、トークン列から切り離す。
 // 素通しすると本文中の && や > がコマンドの構造として解釈される
-function consumeHeredocBodies(
-  command: string,
-  start: number,
-  pending: PendingHeredoc[],
-): number {
+function consumeHeredocBodies(command: string, start: number, pending: PendingHeredoc[]): number {
   let index = start;
   for (const heredoc of pending) {
     const lines: string[] = [];
     let closed = false;
     while (index < command.length) {
       const lineEnd = command.indexOf('\n', index);
-      const line = command.slice(
-        index,
-        lineEnd === -1 ? command.length : lineEnd,
-      );
+      const line = command.slice(index, lineEnd === -1 ? command.length : lineEnd);
       index = lineEnd === -1 ? command.length : lineEnd + 1;
       const candidate = heredoc.stripTabs ? line.replace(/^\t+/, '') : line;
       if (candidate === heredoc.delimiter) {
@@ -165,9 +158,7 @@ export function tokenize(command: string): Token[] {
   const pending: PendingHeredoc[] = [];
   let word = '';
   let hasWord = false;
-  let awaitingDelimiter:
-    | { stripTabs: boolean; token: HeredocToken }
-    | undefined;
+  let awaitingDelimiter: { stripTabs: boolean; token: HeredocToken } | undefined;
   let index = 0;
 
   const flushWord = (): void => {
@@ -297,8 +288,7 @@ function expand(value: string, vars: Map<string, string>): string | undefined {
   }
   result = result.replace(
     /\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g,
-    (_whole, braced?: string, bare?: string) =>
-      vars.get(braced ?? bare ?? '') ?? UNRESOLVED,
+    (_whole, braced?: string, bare?: string) => vars.get(braced ?? bare ?? '') ?? UNRESOLVED,
   );
   if (
     result.includes(UNRESOLVED) ||
@@ -328,15 +318,13 @@ function isPlausiblePath(path: string): boolean {
 // 書き込み先以外の方が多い。書き込みに使われたと読み取れる形のものだけを拾う
 
 // open('doc.md', 'w') のように、その場で書き込みモードを指定している形
-const DIRECT_WRITE_OPEN =
-  /\bopen\s*\(\s*(['"])([^'"\n]*\.md)\1\s*,[^)]*['"][wax]/gi;
+const DIRECT_WRITE_OPEN = /\bopen\s*\(\s*(['"])([^'"\n]*\.md)\1\s*,[^)]*['"][wax]/gi;
 // writeFileSync('doc.md', ...) や Path('doc.md').write_text(...) のように、
 // 書き込み関数へ直接パスを渡している形
 const DIRECT_WRITE_CALL =
   /(?:writeFileSync|Bun\.write|appendFileSync)\s*\(\s*(['"])([^'"\n]*\.md)\1|(['"])([^'"\n]*\.md)\3\s*\)\s*\.\s*write/gi;
 // p = 'doc.md' のように、いったん変数へ置く形。書き込みに使われたかは別で確かめる
-const PATH_ASSIGNMENT =
-  /([A-Za-z_]\w*)\s*=\s*(?:[A-Za-z_][\w.]*\s*\(\s*)?(['"])([^'"\n]*\.md)\2/g;
+const PATH_ASSIGNMENT = /([A-Za-z_]\w*)\s*=\s*(?:[A-Za-z_][\w.]*\s*\(\s*)?(['"])([^'"\n]*\.md)\2/g;
 
 function isWrittenThrough(script: string, variable: string): boolean {
   const used = new RegExp(
@@ -355,9 +343,7 @@ function isWrittenThrough(script: string, variable: string): boolean {
 function markdownLiteralsIn(script: string): string[] {
   const found = [
     ...[...script.matchAll(DIRECT_WRITE_OPEN)].map((match) => match[2] ?? ''),
-    ...[...script.matchAll(DIRECT_WRITE_CALL)].map(
-      (match) => match[2] ?? match[4] ?? '',
-    ),
+    ...[...script.matchAll(DIRECT_WRITE_CALL)].map((match) => match[2] ?? match[4] ?? ''),
   ];
   for (const match of script.matchAll(PATH_ASSIGNMENT)) {
     if (isWrittenThrough(script, match[1] ?? '')) {
@@ -369,8 +355,7 @@ function markdownLiteralsIn(script: string): string[] {
 
 function hasInPlaceFlag(operands: string[]): boolean {
   return operands.some(
-    (operand) =>
-      /^-[a-zA-Z]*i/.test(operand) || operand.startsWith('--in-place'),
+    (operand) => /^-[a-zA-Z]*i/.test(operand) || operand.startsWith('--in-place'),
   );
 }
 
@@ -416,17 +401,13 @@ function readSegment(tokens: Token[]): Segment {
     assignments.push([match[1] ?? '', match[2] ?? '']);
     cursor++;
   }
-  while (
-    cursor < words.length &&
-    COMMAND_PREFIXES.has(basename(words[cursor] ?? ''))
-  ) {
+  while (cursor < words.length && COMMAND_PREFIXES.has(basename(words[cursor] ?? ''))) {
     cursor++;
     while ((words[cursor] ?? '').startsWith('-')) {
       cursor++;
     }
   }
-  const commandName =
-    cursor < words.length ? basename(words[cursor] ?? '') : undefined;
+  const commandName = cursor < words.length ? basename(words[cursor] ?? '') : undefined;
   return {
     commandName,
     operands: words.slice(cursor + 1),
@@ -442,10 +423,7 @@ function readSegment(tokens: Token[]): Segment {
  * 書き込み位置に現れたパスだけを候補にするが、スクリプト本文由来の候補には
  * 読み取り専用のパスも混ざる。実際に書かれたかは呼び出し側で更新時刻を見て判定する
  */
-export function collectMarkdownWriteTargets(
-  command: string,
-  cwd: string,
-): string[] {
+export function collectMarkdownWriteTargets(command: string, cwd: string): string[] {
   const vars = new Map<string, string>([['HOME', homedir()]]);
   const targets = new Set<string>();
   let directory = cwd;
@@ -478,10 +456,7 @@ export function collectMarkdownWriteTargets(
     }
     const operands = segment.operands;
     if (name === 'cd') {
-      const moved = expand(
-        operands.find((operand) => !operand.startsWith('-')) ?? '',
-        vars,
-      );
+      const moved = expand(operands.find((operand) => !operand.startsWith('-')) ?? '', vars);
       if (moved !== undefined && moved !== '') {
         directory = isAbsolute(moved) ? moved : resolve(directory, moved);
       }
@@ -500,10 +475,7 @@ export function collectMarkdownWriteTargets(
       }
       continue;
     }
-    if (
-      OPERAND_WRITERS.has(name) ||
-      (IN_PLACE_EDITORS.has(name) && hasInPlaceFlag(operands))
-    ) {
+    if (OPERAND_WRITERS.has(name) || (IN_PLACE_EDITORS.has(name) && hasInPlaceFlag(operands))) {
       // sed / perl のスクリプト本体が .md で終わることはまず無いので、
       // ファイル引数とスクリプト引数を区別せずに .md だけ拾う
       addAll(operands);

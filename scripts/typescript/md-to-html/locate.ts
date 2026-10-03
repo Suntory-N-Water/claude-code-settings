@@ -18,9 +18,7 @@ function frontMatterLength(markdown: string): number {
   if (!/^---\r?\n/.test(markdown)) {
     return 0;
   }
-  return (
-    markdown.match(/^---\r?\n[\s\S]*?\r?\n---[^\S\n]*(?:\n|$)/)?.[0].length ?? 0
-  );
+  return markdown.match(/^---\r?\n[\s\S]*?\r?\n---[^\S\n]*(?:\n|$)/)?.[0].length ?? 0;
 }
 
 function project(markdown: string): Projection {
@@ -108,14 +106,10 @@ function bestCandidate(
   let best = candidates[0] as number;
   let bestScore = -1;
   for (const candidate of candidates) {
-    const before = text.slice(
-      Math.max(0, candidate - prefix.length),
-      candidate,
-    );
+    const before = text.slice(Math.max(0, candidate - prefix.length), candidate);
     const afterStart = candidate + exactLength;
     const after = text.slice(afterStart, afterStart + suffix.length);
-    const score =
-      commonSuffixLength(before, prefix) + commonPrefixLength(after, suffix);
+    const score = commonSuffixLength(before, prefix) + commonPrefixLength(after, suffix);
     if (score > bestScore) {
       best = candidate;
       bestScore = score;
@@ -137,12 +131,7 @@ function stripMarkup(raw: string): string {
     .replace(/\*\*|__|`/g, '');
 }
 
-function excerpt(
-  markdown: string,
-  projection: Projection,
-  start: number,
-  end: number,
-): string {
+function excerpt(markdown: string, projection: Projection, start: number, end: number): string {
   const from = projection.offsetOf[start] as number;
   // 末尾の句読点や閉じ記号は射影から落ちているので、同じ行にある限り拾い直す
   const limit = projection.offsetOf[end + 1] ?? markdown.length;
@@ -159,10 +148,7 @@ export type LocateResult =
   | { status: 'shifted'; line: number; quote: string }
   | { status: 'lost' };
 
-export function locateAnnotation(
-  markdown: string,
-  annotation: Annotation,
-): LocateResult {
+export function locateAnnotation(markdown: string, annotation: Annotation): LocateResult {
   const projection = project(markdown);
   const exact = projectQuote(annotation.exact);
   const prefix = projectQuote(annotation.prefix);
@@ -171,13 +157,7 @@ export function locateAnnotation(
   if (exact.length > 0) {
     const candidates = allIndexesOf(projection.text, exact);
     if (candidates.length > 0) {
-      const start = bestCandidate(
-        projection.text,
-        candidates,
-        exact.length,
-        prefix,
-        suffix,
-      );
+      const start = bestCandidate(projection.text, candidates, exact.length, prefix, suffix);
       const end = start + exact.length - 1;
       return {
         status: 'found',

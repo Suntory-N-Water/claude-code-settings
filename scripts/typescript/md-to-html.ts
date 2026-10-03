@@ -1,12 +1,5 @@
 #!/usr/bin/env -S bun run --silent
-import {
-  basename,
-  dirname,
-  extname,
-  isAbsolute,
-  join,
-  resolve,
-} from 'node:path';
+import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path';
 import { defineHook, runHook } from 'cc-hooks-ts';
 import { micromark } from 'micromark';
 import { gfm, gfmHtml } from 'micromark-extension-gfm';
@@ -79,10 +72,7 @@ function decodeAttributeValue(value: string): string {
   }
 }
 
-async function toDataUri(
-  src: string,
-  baseDir: string,
-): Promise<string | undefined> {
+async function toDataUri(src: string, baseDir: string): Promise<string | undefined> {
   if (/^(https?:|data:)/i.test(src)) {
     return undefined;
   }
@@ -91,9 +81,7 @@ async function toDataUri(
   if (!mime) {
     return undefined;
   }
-  const absolutePath = isAbsolute(decoded)
-    ? decoded
-    : resolve(baseDir, decoded);
+  const absolutePath = isAbsolute(decoded) ? decoded : resolve(baseDir, decoded);
   const file = Bun.file(absolutePath);
   if (!(await file.exists())) {
     return undefined;
@@ -102,10 +90,7 @@ async function toDataUri(
   return `data:${mime};base64,${bytes.toBase64()}`;
 }
 
-async function embedLocalImages(
-  html: string,
-  baseDir: string,
-): Promise<string> {
+async function embedLocalImages(html: string, baseDir: string): Promise<string> {
   const matches = [...html.matchAll(/(<img[^>]*?src=")([^"]*)(")/g)];
   let result = '';
   let cursor = 0;
@@ -126,11 +111,7 @@ function renderMarkdown(body: string): string {
   });
 }
 
-async function saveSourcePath(
-  port: number,
-  outPath: string,
-  sourcePath: string,
-): Promise<boolean> {
+async function saveSourcePath(port: number, outPath: string, sourcePath: string): Promise<boolean> {
   const doc = encodeURIComponent(docParamForHtml(outPath));
   try {
     const res = await fetch(`http://127.0.0.1:${port}/api/source?doc=${doc}`, {
@@ -177,9 +158,7 @@ export function brokenByEdit(
 }
 
 async function transpileClient(): Promise<string> {
-  const source = await Bun.file(
-    join(import.meta.dir, 'md-to-html', 'client.ts'),
-  ).text();
+  const source = await Bun.file(join(import.meta.dir, 'md-to-html', 'client.ts')).text();
   return new Bun.Transpiler({ loader: 'ts' }).transformSync(source);
 }
 
@@ -212,10 +191,7 @@ async function convert(filePath: string): Promise<Conversion | undefined> {
       return undefined;
     }
     const trimmedBody = body.trim();
-    if (
-      trimmedBody.length < MIN_BODY_LENGTH &&
-      !trimmedBody.includes(IMAGE_MARKER)
-    ) {
+    if (trimmedBody.length < MIN_BODY_LENGTH && !trimmedBody.includes(IMAGE_MARKER)) {
       return undefined;
     }
 
@@ -224,8 +200,7 @@ async function convert(filePath: string): Promise<Conversion | undefined> {
     const contentHtml = await highlightCodeBlocks(
       await embedLocalImages(rawContentHtml, dirname(filePath)),
     );
-    const title =
-      frontMatterTitle ?? headingTitle ?? basename(filePath, TARGET_EXTENSION);
+    const title = frontMatterTitle ?? headingTitle ?? basename(filePath, TARGET_EXTENSION);
 
     const outDir = join(OUTPUT_ROOT, dirname(filePath).replaceAll('/', '-'));
     const outBase = basename(filePath, TARGET_EXTENSION);
@@ -249,8 +224,7 @@ async function convert(filePath: string): Promise<Conversion | undefined> {
     const port = await ensureServer();
 
     const commentsPath = commentsPathForHtml(outPath);
-    const savedViaServer =
-      port !== undefined && (await saveSourcePath(port, outPath, filePath));
+    const savedViaServer = port !== undefined && (await saveSourcePath(port, outPath, filePath));
     if (!savedViaServer) {
       // サーバが起動できないときだけ直接書く。sourcePath が欠けると注入時に
       // 対象 Markdown を特定できなくなるので、競合リスクより欠落を避ける
@@ -260,19 +234,11 @@ async function convert(filePath: string): Promise<Conversion | undefined> {
     }
     const comments = await readCommentsFile(commentsPath);
 
-    const relPath = docParamForHtml(outPath)
-      .split('/')
-      .map(encodeURIComponent)
-      .join('/');
+    const relPath = docParamForHtml(outPath).split('/').map(encodeURIComponent).join('/');
     const viewUrl =
-      port === undefined
-        ? Bun.pathToFileURL(outPath).href
-        : `http://localhost:${port}/${relPath}`;
+      port === undefined ? Bun.pathToFileURL(outPath).href : `http://localhost:${port}/${relPath}`;
 
-    const contextLines = [
-      `Markdown を HTML に変換しました: ${outPath}`,
-      `閲覧 URL: ${viewUrl}`,
-    ];
+    const contextLines = [`Markdown を HTML に変換しました: ${outPath}`, `閲覧 URL: ${viewUrl}`];
     const unresolved = unresolvedAnnotations(comments);
     if (unresolved.length > 0) {
       const broken = brokenByEdit(previousBody, body, unresolved);
@@ -297,9 +263,7 @@ async function convert(filePath: string): Promise<Conversion | undefined> {
       systemMessage: `Markdown を HTML に変換しました: ${viewUrl}`,
     };
   } catch (err) {
-    process.stderr.write(
-      `[md-to-html] ${err instanceof Error ? err.message : String(err)}\n`,
-    );
+    process.stderr.write(`[md-to-html] ${err instanceof Error ? err.message : String(err)}\n`);
     return undefined;
   }
 }
@@ -317,10 +281,7 @@ async function changedRecently(filePath: string): Promise<boolean> {
   return Date.now() - file.lastModified <= RECENT_CHANGE_WINDOW_MS;
 }
 
-export async function bashTargets(
-  command: string,
-  cwd: string,
-): Promise<string[]> {
+export async function bashTargets(command: string, cwd: string): Promise<string[]> {
   const candidates = collectMarkdownWriteTargets(command, cwd);
   const changed = await Promise.all(candidates.map(changedRecently));
   return candidates.filter((_path, index) => changed[index] === true);
@@ -356,13 +317,9 @@ const hook = defineHook({
       output: {
         hookSpecificOutput: {
           hookEventName: 'PostToolUse',
-          additionalContext: conversions
-            .map((conversion) => conversion.contextText)
-            .join('\n\n'),
+          additionalContext: conversions.map((conversion) => conversion.contextText).join('\n\n'),
         },
-        systemMessage: conversions
-          .map((conversion) => conversion.systemMessage)
-          .join('\n'),
+        systemMessage: conversions.map((conversion) => conversion.systemMessage).join('\n'),
       },
     });
   },

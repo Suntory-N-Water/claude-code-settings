@@ -2,8 +2,7 @@ import { bundledLanguages, createHighlighter } from 'shiki';
 
 // micromark はフェンス情報を class="language-xxx" として出力する。
 // コード内の '<' はエスケープされるため、閉じタグの誤検出は起きない
-const CODE_BLOCK_PATTERN =
-  /<pre><code(?: class="language-([^"]*)")?>([\s\S]*?)<\/code><\/pre>/g;
+const CODE_BLOCK_PATTERN = /<pre><code(?: class="language-([^"]*)")?>([\s\S]*?)<\/code><\/pre>/g;
 
 const MERMAID_LANGUAGE = 'mermaid';
 export const MERMAID_BLOCK_CLASS = 'mermaid';
@@ -81,11 +80,7 @@ export async function highlightCodeBlocks(html: string): Promise<string> {
   for (const block of blocks) {
     result += html.slice(cursor, block.start);
     cursor = block.end;
-    result += renderBlock(
-      html.slice(block.start, block.end),
-      block,
-      highlighter,
-    );
+    result += renderBlock(html.slice(block.start, block.end), block, highlighter);
   }
   return result + html.slice(cursor);
 }

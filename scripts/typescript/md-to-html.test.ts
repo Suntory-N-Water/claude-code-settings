@@ -84,8 +84,7 @@ describe('編集によるコメント位置の劣化検知', () => {
 
   it('複数のコメントのうち、劣化したものだけが対象になること', () => {
     const previousBody = 'これは元の文章です。不変の文章はここにあります。';
-    const body =
-      'これは新しい文章です。不変の文章はここにあります。追加した文章です。';
+    const body = 'これは新しい文章です。不変の文章はここにあります。追加した文章です。';
     const degraded = createAnnotation({ id: 'degraded', exact: '元の文章' });
     const unaffected = createAnnotation({
       id: 'unaffected',
@@ -133,9 +132,7 @@ describe('視覚差分の生成', () => {
     const result = renderBodyDiff(previousBody, body, toHtml(body));
 
     expect(result).toContain('<del');
-    expect(result?.match(/<del[^>]*>(.*?)<\/del>/)?.[1]).toContain(
-      'REMOVEDWORD',
-    );
+    expect(result?.match(/<del[^>]*>(.*?)<\/del>/)?.[1]).toContain('REMOVEDWORD');
   });
 });
 
@@ -185,10 +182,7 @@ describe('Bash コマンドから変換対象を選ぶ', () => {
 
     const result = await bashTargets(command, workDir);
 
-    expect(result.sort()).toEqual([
-      join(workDir, 'second.md'),
-      join(workDir, 'written.md'),
-    ]);
+    expect(result.sort()).toEqual([join(workDir, 'second.md'), join(workDir, 'written.md')]);
   });
 
   it('読み取りだけのコマンドのとき、対象にならないこと', async () => {

@@ -12,9 +12,8 @@ function render(markdown: string): string {
 }
 
 function textOf(html: string): string {
-  return parseHTML(`<div id="root">${html}</div>`).document.getElementById(
-    'root',
-  )?.textContent as string;
+  return parseHTML(`<div id="root">${html}</div>`).document.getElementById('root')
+    ?.textContent as string;
 }
 
 const FENCE = '```';
@@ -25,9 +24,7 @@ function fence(language: string, code: string): string {
 
 describe('highlightCodeBlocks', () => {
   it('対応言語のコードブロックに Shiki の色を付ける', async () => {
-    const html = await highlightCodeBlocks(
-      render(fence('ts', 'const a: number = 1;')),
-    );
+    const html = await highlightCodeBlocks(render(fence('ts', 'const a: number = 1;')));
     expect(html).toContain('class="shiki');
     expect(html).toContain('--shiki-light:');
     expect(html).toContain('--shiki-dark:');
@@ -43,9 +40,7 @@ describe('highlightCodeBlocks', () => {
 
   it('mermaid のコードブロックを描画対象の pre に変換する', async () => {
     const definition = 'graph TD\n  A --> B';
-    const html = await highlightCodeBlocks(
-      render(fence('mermaid', definition)),
-    );
+    const html = await highlightCodeBlocks(render(fence('mermaid', definition)));
     expect(html).toContain('<pre class="mermaid">');
     expect(html).not.toContain('language-mermaid');
     expect(textOf(html).trim()).toBe(definition);

@@ -54,9 +54,7 @@ function collectMetaTags(html: string): Map<string, string> {
   const tags = new Map<string, string>();
   for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
     const tag = match[0];
-    const key = tag
-      .match(/\b(?:name|property)\s*=\s*["']([^"']+)["']/i)?.[1]
-      ?.toLowerCase();
+    const key = tag.match(/\b(?:name|property)\s*=\s*["']([^"']+)["']/i)?.[1]?.toLowerCase();
     const content = tag.match(/\bcontent\s*=\s*["']([^"']*)["']/i)?.[1];
     if (key === undefined || content === undefined || tags.has(key)) {
       continue;
@@ -206,12 +204,7 @@ const hook = defineHook({
     if (!response.ok) {
       return c.success();
     }
-    if (
-      response.headers
-        .get('Content-Type')
-        ?.toLowerCase()
-        .includes('text/plain') === true
-    ) {
+    if (response.headers.get('Content-Type')?.toLowerCase().includes('text/plain') === true) {
       return c.success();
     }
 

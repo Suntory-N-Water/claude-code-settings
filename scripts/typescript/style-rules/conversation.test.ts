@@ -32,18 +32,11 @@ async function transcript(...texts: string[]): Promise<string> {
       message: { role: 'assistant', content: [{ type: 'text', text }] },
     })),
   ];
-  await Bun.write(
-    path,
-    entries.map((entry) => JSON.stringify(entry)).join('\n'),
-  );
+  await Bun.write(path, entries.map((entry) => JSON.stringify(entry)).join('\n'));
   return path;
 }
 
-function check(
-  transcriptPath: string,
-  lastAssistantMessage?: string,
-  stopHookActive = false,
-) {
+function check(transcriptPath: string, lastAssistantMessage?: string, stopHookActive = false) {
   return decideConversation(
     {
       sessionId: SESSION_ID,
@@ -115,9 +108,7 @@ test('warning だけの時、差し戻さないが記録には残すこと', asy
   const path = await transcript(WARNING_ONLY);
 
   expect(await check(path)).toBeUndefined();
-  expect((await logRecords()).map((record) => record.severity)).toEqual([
-    'warning',
-  ]);
+  expect((await logRecords()).map((record) => record.severity)).toEqual(['warning']);
 });
 
 test('同じ指摘は同じセッションで一度しか報告も記録もしないこと', async () => {
@@ -129,10 +120,7 @@ test('同じ指摘は同じセッションで一度しか報告も記録もし�
 });
 
 test('差し戻し文面の上限を超える指摘がある時、残りの件数を示すこと', async () => {
-  const sentences = Array.from(
-    { length: 7 },
-    (_, index) => `項目 ${index + 1} の設定は鍵となる。`,
-  );
+  const sentences = Array.from({ length: 7 }, (_, index) => `項目 ${index + 1} の設定は鍵となる。`);
   const path = await transcript(sentences.join('\n'));
 
   const message = await check(path);

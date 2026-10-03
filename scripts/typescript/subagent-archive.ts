@@ -41,9 +41,7 @@ function uniquePath(dir: string, baseName: string): string {
   }
 }
 
-function deriveParentTranscriptPath(
-  agentTranscriptPath: string,
-): string | undefined {
+function deriveParentTranscriptPath(agentTranscriptPath: string): string | undefined {
   // <project>/<session-id>/subagents/agent-<id>.jsonl
   // → <project>/<session-id>.jsonl
   const subagentsDir = dirname(agentTranscriptPath);
@@ -59,9 +57,7 @@ function deriveParentTranscriptPath(
   return parentPath;
 }
 
-function extractDescription(
-  input: BetaToolUseBlock['input'],
-): string | undefined {
+function extractDescription(input: BetaToolUseBlock['input']): string | undefined {
   if (typeof input !== 'object' || input === null) {
     return undefined;
   }
@@ -69,9 +65,7 @@ function extractDescription(
   return typeof desc === 'string' ? desc : undefined;
 }
 
-function extractPromptField(
-  input: BetaToolUseBlock['input'],
-): string | undefined {
+function extractPromptField(input: BetaToolUseBlock['input']): string | undefined {
   if (typeof input !== 'object' || input === null) {
     return undefined;
   }
@@ -79,10 +73,7 @@ function extractPromptField(
   return typeof prompt === 'string' ? prompt : undefined;
 }
 
-function findDescriptionInParent(
-  parentPath: string,
-  subagentPrompt: string,
-): string | undefined {
+function findDescriptionInParent(parentPath: string, subagentPrompt: string): string | undefined {
   const content = readFileSync(parentPath, 'utf-8');
 
   for (const line of content.split('\n')) {
@@ -192,8 +183,7 @@ const hook = defineHook({
         return context.success();
       }
 
-      const { agent_type, agent_transcript_path, last_assistant_message } =
-        context.input;
+      const { agent_type, agent_transcript_path, last_assistant_message } = context.input;
 
       if (!TARGET_AGENT_TYPES.has(agent_type)) {
         return context.success();
@@ -205,8 +195,7 @@ const hook = defineHook({
 
       const entries = readTranscript(agent_transcript_path);
 
-      const response =
-        last_assistant_message ?? extractLastAssistantText(entries);
+      const response = last_assistant_message ?? extractLastAssistantText(entries);
       if (!response) {
         return context.success();
       }

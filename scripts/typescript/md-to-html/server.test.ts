@@ -41,29 +41,21 @@ async function getComments(doc: string = TEST_DOC): Promise<Response> {
   return await app.request(`/api/comments?doc=${encodeURIComponent(doc)}`);
 }
 
-async function patchComment(
-  id: string,
-  doc: string = TEST_DOC,
-): Promise<Response> {
+async function patchComment(id: string, doc: string = TEST_DOC): Promise<Response> {
   return await app.request(
     `/api/comments?doc=${encodeURIComponent(doc)}&id=${encodeURIComponent(id)}`,
     { method: 'PATCH' },
   );
 }
 
-async function deleteComment(
-  id: string,
-  doc: string = TEST_DOC,
-): Promise<Response> {
+async function deleteComment(id: string, doc: string = TEST_DOC): Promise<Response> {
   return await app.request(
     `/api/comments?doc=${encodeURIComponent(doc)}&id=${encodeURIComponent(id)}`,
     { method: 'DELETE' },
   );
 }
 
-async function storedAnnotations(
-  doc: string = TEST_DOC,
-): Promise<Annotation[]> {
+async function storedAnnotations(doc: string = TEST_DOC): Promise<Annotation[]> {
   const res = await getComments(doc);
   const comments = (await res.json()) as CommentsFile;
   return comments.annotations;

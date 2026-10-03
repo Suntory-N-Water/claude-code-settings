@@ -30,10 +30,7 @@ type Entry = {
 };
 
 function isEnglish(text: string): boolean {
-  const stripped = IGNORE.reduce(
-    (acc, pattern) => acc.replace(pattern, ''),
-    text,
-  );
+  const stripped = IGNORE.reduce((acc, pattern) => acc.replace(pattern, ''), text);
   const latin = stripped.match(LATIN)?.length ?? 0;
   const ja = stripped.match(JA)?.length ?? 0;
   return latin >= MIN_LATIN && latin > ja * RATIO;
@@ -55,10 +52,7 @@ function isUserTurn(entry: Entry): boolean {
   if (typeof content === 'string') {
     return true;
   }
-  return (
-    Array.isArray(content) &&
-    !blocksOf(entry).some((c) => c.type === 'tool_result')
-  );
+  return Array.isArray(content) && !blocksOf(entry).some((c) => c.type === 'tool_result');
 }
 
 function readEntries(path: string): Entry[] {
@@ -112,9 +106,7 @@ function englishPassages(entries: readonly Entry[]): string[] {
       }
     }
   }
-  return final
-    .filter(isEnglish)
-    .map((text) => (text.trim().split('\n')[0] ?? '').slice(0, 80));
+  return final.filter(isEnglish).map((text) => (text.trim().split('\n')[0] ?? '').slice(0, 80));
 }
 
 function formatReason(hits: readonly string[]): string {
@@ -139,9 +131,7 @@ const hook = defineHook({
     }
 
     try {
-      const hits = englishPassages(
-        await waitForFinal(context.input.transcript_path),
-      );
+      const hits = englishPassages(await waitForFinal(context.input.transcript_path));
       if (hits.length === 0) {
         return context.success();
       }

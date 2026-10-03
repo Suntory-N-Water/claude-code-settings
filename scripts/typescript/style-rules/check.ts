@@ -18,8 +18,7 @@ export async function runStyleCheck({
     return [];
   }
 
-  const scope =
-    writtenText === undefined ? undefined : sanitizedText(writtenText);
+  const scope = writtenText === undefined ? undefined : sanitizedText(writtenText);
   const words = checkWords(sentences).filter(
     (violation) => scope === undefined || scope.includes(violation.matched),
   );

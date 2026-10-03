@@ -69,9 +69,7 @@ const missCases: [string, string][] = [
 ];
 
 describe('ai-words.json の辞書', () => {
-  test.each(
-    hitCases,
-  )('「%s」を書いたとき、「%s」の指摘が出ること', async (text, word) => {
+  test.each(hitCases)('「%s」を書いたとき、「%s」の指摘が出ること', async (text, word) => {
     const found = await messages(text);
 
     expect(found.some((message) => message.includes(`"${word}"`))).toBe(true);
@@ -82,8 +80,6 @@ describe('ai-words.json の辞書', () => {
   )('「%s」のように別の意味で使ったとき、「%s」の指摘が出ないこと', async (text, word) => {
     const found = await messages(text);
 
-    expect(found.filter((message) => message.includes(`"${word}"`))).toEqual(
-      [],
-    );
+    expect(found.filter((message) => message.includes(`"${word}"`))).toEqual([]);
   });
 });

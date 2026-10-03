@@ -31,10 +31,7 @@ export async function readInjectedIds(sessionId: string): Promise<Set<string>> {
   }
 }
 
-export async function recordInjectedIds(
-  sessionId: string,
-  ids: string[],
-): Promise<void> {
+export async function recordInjectedIds(sessionId: string, ids: string[]): Promise<void> {
   if (ids.length === 0) {
     return;
   }
@@ -42,10 +39,7 @@ export async function recordInjectedIds(
   for (const id of ids) {
     known.add(id);
   }
-  await Bun.write(
-    sessionFilePath(sessionId),
-    JSON.stringify({ injectedIds: [...known] }, null, 2),
-  );
+  await Bun.write(sessionFilePath(sessionId), JSON.stringify({ injectedIds: [...known] }, null, 2));
 }
 
 export async function pruneOldSessions(): Promise<void> {

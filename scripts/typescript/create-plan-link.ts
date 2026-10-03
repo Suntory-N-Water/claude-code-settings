@@ -130,9 +130,7 @@ function uniqueLinkName(desiredName: string, linksDir: string): string {
     return desiredName;
   }
   const ext = '.md';
-  const stem = desiredName.endsWith(ext)
-    ? desiredName.slice(0, -ext.length)
-    : desiredName;
+  const stem = desiredName.endsWith(ext) ? desiredName.slice(0, -ext.length) : desiredName;
   for (let suffix = 2; ; suffix++) {
     const candidate = `${stem}_${suffix}${ext}`;
     if (!existsSync(join(linksDir, candidate))) {
@@ -164,8 +162,7 @@ const hook = defineHook({
         return context.success();
       }
 
-      const filePath = (context.input.tool_input as { file_path?: string })
-        .file_path;
+      const filePath = (context.input.tool_input as { file_path?: string }).file_path;
       if (!filePath) {
         return context.success();
       }
@@ -227,9 +224,7 @@ const hook = defineHook({
       const linkTarget = join('..', 'plans', basename(absPath));
 
       // 冪等性: 期待する名前のリンクが既に存在し、同じ原本を指していれば何もしない
-      const alreadyCorrect = sameSourceLinks.find(
-        (link) => link.fullPath === desiredPath,
-      );
+      const alreadyCorrect = sameSourceLinks.find((link) => link.fullPath === desiredPath);
       if (alreadyCorrect) {
         // 過去の見出しで生成された別名リンクが残っていれば一緒に掃除する
         for (const link of sameSourceLinks) {

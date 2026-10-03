@@ -1,12 +1,6 @@
-import {
-  splitSegments,
-  type Token,
-  tokenize,
-} from './md-to-html/bash-targets.ts';
+import { splitSegments, type Token, tokenize } from './md-to-html/bash-targets.ts';
 
-export type MessageSource =
-  | { kind: 'text'; text: string }
-  | { kind: 'file'; path: string };
+export type MessageSource = { kind: 'text'; text: string } | { kind: 'file'; path: string };
 
 export interface MessageTarget {
   label: string;
@@ -161,9 +155,7 @@ export function stripTrailers(text: string): string {
     .trim();
 }
 
-function toTextSource(
-  raw: string | undefined,
-): { kind: 'text'; text: string } | undefined {
+function toTextSource(raw: string | undefined): { kind: 'text'; text: string } | undefined {
   if (raw === undefined) {
     return undefined;
   }
@@ -172,10 +164,7 @@ function toTextSource(
 }
 
 // -F や --body-file は '-' で標準入力を指す。渡し方はヒアドキュメントに限られる
-function fileSource(
-  value: string,
-  heredocs: string[],
-): MessageSource | undefined {
+function fileSource(value: string, heredocs: string[]): MessageSource | undefined {
   if (value !== '-') {
     return { kind: 'file', path: value };
   }
@@ -189,9 +178,7 @@ function commitTargets(segment: Segment): MessageTarget[] {
     .map(resolveWord)
     .filter((value) => value !== undefined);
   // -m を並べると git は空行で連結して 1 つのメッセージにする
-  const joined = toTextSource(
-    messages.length === 0 ? undefined : messages.join('\n\n'),
-  );
+  const joined = toTextSource(messages.length === 0 ? undefined : messages.join('\n\n'));
   if (joined !== undefined) {
     targets.push({
       label: 'コミットメッセージ',
@@ -217,14 +204,9 @@ function commitTargets(segment: Segment): MessageTarget[] {
   return targets;
 }
 
-function ghTargets(
-  segment: Segment,
-  resource: GhResource,
-  action: string,
-): MessageTarget[] {
+function ghTargets(segment: Segment, resource: GhResource, action: string): MessageTarget[] {
   const name = GH_RESOURCE_NAMES[resource];
-  const bodyLabel =
-    action === 'comment' ? `${name} のコメント` : `${name} の本文`;
+  const bodyLabel = action === 'comment' ? `${name} のコメント` : `${name} の本文`;
   const targets: MessageTarget[] = [];
 
   for (const raw of flagValues(segment.words, '--title', '-t')) {
@@ -271,11 +253,7 @@ export function collectMessageTargets(command: string): MessageTarget[] {
     }
     if (head === 'gh') {
       const [resource, action] = subcommandsOf(words, 2);
-      if (
-        isGhResource(resource) &&
-        action !== undefined &&
-        GH_WRITE_ACTIONS.has(action)
-      ) {
+      if (isGhResource(resource) && action !== undefined && GH_WRITE_ACTIONS.has(action)) {
         targets.push(...ghTargets({ ...segment, words }, resource, action));
       }
     }

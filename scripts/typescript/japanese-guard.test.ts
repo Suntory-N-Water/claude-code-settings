@@ -5,8 +5,7 @@ import { join } from 'node:path';
 
 const SCRIPT = join(import.meta.dir, 'japanese-guard.ts');
 const DIR = mkdtempSync(join(tmpdir(), 'japanese-guard-'));
-const ENGLISH =
-  'I updated the configuration file and verified that everything works.';
+const ENGLISH = 'I updated the configuration file and verified that everything works.';
 const JAPANESE = '設定ファイルを書き換えて、動作を確かめました。';
 
 afterAll(() => rmSync(DIR, { recursive: true, force: true }));
@@ -122,14 +121,8 @@ describe('数えない要素', () => {
   test.each([
     ['コードブロック', `次のとおりです。\n\n\`\`\`\n${ENGLISH}\n\`\`\`\n`],
     ['インラインコード', `次のとおりです。\`${ENGLISH}\``],
-    [
-      'URL',
-      '次のとおりです。https://example.com/docs/configuration/verification-guide',
-    ],
-    [
-      'メールアドレス',
-      '次のとおりです。configuration.verification@example-company.com',
-    ],
+    ['URL', '次のとおりです。https://example.com/docs/configuration/verification-guide'],
+    ['メールアドレス', '次のとおりです。configuration.verification@example-company.com'],
     ['Markdown リンク', `次のとおりです。[${ENGLISH}](https://example.com)`],
   ])('英語が %s の中にだけあるとき、差し戻さないこと', async (_, finalText) => {
     const { stdout } = await runHook(answerOf(finalText));

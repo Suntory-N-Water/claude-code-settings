@@ -79,10 +79,7 @@ export function hasTypeScriptEdits(transcriptPath: string): boolean {
       for (const line of lines) {
         try {
           const msg: TranscriptEntry = JSON.parse(line);
-          if (
-            msg.type === 'user' &&
-            !msg.message.content.startsWith('Stop hook feedback:')
-          ) {
+          if (msg.type === 'user' && !msg.message.content.startsWith('Stop hook feedback:')) {
             return msg.timestamp;
           }
         } catch {
@@ -101,18 +98,10 @@ export function hasTypeScriptEdits(transcriptPath: string): boolean {
         const msg: TranscriptEntry = JSON.parse(line);
         if (msg.type === 'assistant' && msg.timestamp > lastUserTimestamp) {
           for (const content of msg.message.content) {
-            if (
-              content.type === 'tool_use' &&
-              content.name &&
-              isTypeScriptEditTool(content.name)
-            ) {
+            if (content.type === 'tool_use' && content.name && isTypeScriptEditTool(content.name)) {
               // file_path または relative_path のいずれかをチェック
-              const filePath =
-                content.input?.file_path || content.input?.relative_path;
-              if (
-                filePath &&
-                isTypeScriptFile(filePath, TYPE_SCRIPT_EXTENSIONS)
-              ) {
+              const filePath = content.input?.file_path || content.input?.relative_path;
+              if (filePath && isTypeScriptFile(filePath, TYPE_SCRIPT_EXTENSIONS)) {
                 return true;
               }
             }

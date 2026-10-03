@@ -66,10 +66,7 @@ function parseCommands(commandsStr: string): string[] {
  * @param cwd - 実行ディレクトリ
  * @returns コマンド実行結果
  */
-async function runCommand(
-  command: string,
-  cwd: string,
-): Promise<CommandResult> {
+async function runCommand(command: string, cwd: string): Promise<CommandResult> {
   const proc = await $`bun run ${command}`.cwd(cwd).nothrow().quiet();
 
   return {
@@ -86,10 +83,7 @@ async function runCommand(
  * @param cwd - 実行ディレクトリ
  * @returns 全コマンドの実行結果
  */
-async function runCommands(
-  commands: string[],
-  cwd: string,
-): Promise<CommandResult[]> {
+async function runCommands(commands: string[], cwd: string): Promise<CommandResult[]> {
   const results: CommandResult[] = [];
 
   for (const command of commands) {
@@ -105,18 +99,12 @@ function commandOutput(result: CommandResult): string {
   return outputs.length > 0 ? outputs.join('\n') : 'No output captured';
 }
 
-function writeFailureLog(
-  failures: CommandResult[],
-  sessionId: string,
-): string | undefined {
+function writeFailureLog(failures: CommandResult[], sessionId: string): string | undefined {
   try {
     mkdirSync(LOG_DIR, { recursive: true });
     const logPath = join(LOG_DIR, `${sessionId}.log`);
     const body = failures
-      .map(
-        (f) =>
-          `=== bun run ${f.command} (exit ${f.code}) ===\n${commandOutput(f)}`,
-      )
+      .map((f) => `=== bun run ${f.command} (exit ${f.code}) ===\n${commandOutput(f)}`)
       .join('\n\n');
     writeFileSync(logPath, `${new Date().toISOString()}\n\n${body}\n`, 'utf-8');
     return logPath;
@@ -128,15 +116,9 @@ function writeFailureLog(
   }
 }
 
-function formatErrorMessage(
-  failures: CommandResult[],
-  sessionId: string,
-): string {
-  const header =
-    '\x1b[31mSome commands failed. Fix the following errors:\x1b[0m';
-  const list = failures
-    .map((f) => `- bun run ${f.command} (exit ${f.code})`)
-    .join('\n');
+function formatErrorMessage(failures: CommandResult[], sessionId: string): string {
+  const header = '\x1b[31mSome commands failed. Fix the following errors:\x1b[0m';
+  const list = failures.map((f) => `- bun run ${f.command} (exit ${f.code})`).join('\n');
 
   const logPath = writeFailureLog(failures, sessionId);
   if (logPath === undefined) {

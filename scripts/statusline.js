@@ -18,9 +18,7 @@ process.stdin.on('end', async () => {
 
     // Extract values
     const model = data.model?.display_name || 'Unknown';
-    const currentDir = path.basename(
-      data.workspace?.current_dir || data.cwd || '.',
-    );
+    const currentDir = path.basename(data.workspace?.current_dir || data.cwd || '.');
     const sessionId = data.session_id;
 
     // Calculate token usage for current session
@@ -50,10 +48,7 @@ process.stdin.on('end', async () => {
     }
 
     // Calculate percentage
-    const percentage = Math.min(
-      100,
-      Math.round((totalTokens / COMPACTION_THRESHOLD) * 100),
-    );
+    const percentage = Math.min(100, Math.round((totalTokens / COMPACTION_THRESHOLD) * 100));
 
     // Format token display
     const tokenDisplay = formatTokenCount(totalTokens);

@@ -28,11 +28,7 @@ async function buildDocIndex(): Promise<Map<string, string>> {
   return index;
 }
 
-async function resolveOne(
-  id: string,
-  port: number,
-  index: Map<string, string>,
-): Promise<boolean> {
+async function resolveOne(id: string, port: number, index: Map<string, string>): Promise<boolean> {
   const doc = index.get(id);
   if (doc === undefined) {
     process.stderr.write(`id が見つかりません: ${id}\n`);

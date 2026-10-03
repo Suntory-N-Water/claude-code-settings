@@ -10,12 +10,7 @@ function collect(command: string): string[] {
 
 describe('リダイレクトによる書き込みの検知', () => {
   it('ヒアドキュメントの書き出し先が対象になること', () => {
-    const command = [
-      "cat > docs/plan.md <<'EOF'",
-      '# 計画',
-      '本文',
-      'EOF',
-    ].join('\n');
+    const command = ["cat > docs/plan.md <<'EOF'", '# 計画', '本文', 'EOF'].join('\n');
 
     expect(collect(command)).toEqual([`${CWD}/docs/plan.md`]);
   });
@@ -42,16 +37,13 @@ describe('リダイレクトによる書き込みの検知', () => {
   });
 
   it('コマンドの出力を書き出した先も対象になること', () => {
-    expect(collect('gh issue view 965 --json body -q .body > out.md')).toEqual([
-      `${CWD}/out.md`,
-    ]);
+    expect(collect('gh issue view 965 --json body -q .body > out.md')).toEqual([`${CWD}/out.md`]);
   });
 });
 
 describe('その場書き換えコマンドの検知', () => {
   it('sed -i の対象ファイルが複数でもすべて対象になること', () => {
-    const command =
-      "sed -i '' -e 's|旧|新|g' docs/a.md docs/b.md && grep -rn 新 docs";
+    const command = "sed -i '' -e 's|旧|新|g' docs/a.md docs/b.md && grep -rn 新 docs";
 
     expect(collect(command)).toEqual([`${CWD}/docs/a.md`, `${CWD}/docs/b.md`]);
   });
@@ -61,9 +53,7 @@ describe('その場書き換えコマンドの検知', () => {
   });
 
   it('perl の -i も対象になること', () => {
-    expect(collect("perl -i -pe 's/旧/新/' docs/a.md")).toEqual([
-      `${CWD}/docs/a.md`,
-    ]);
+    expect(collect("perl -i -pe 's/旧/新/' docs/a.md")).toEqual([`${CWD}/docs/a.md`]);
   });
 
   it('tee の書き出し先が対象になること', () => {
@@ -73,9 +63,7 @@ describe('その場書き換えコマンドの検知', () => {
 
 describe('コピーと移動の検知', () => {
   it('移動先が対象になり、移動元は対象にならないこと', () => {
-    expect(collect('mv docs/old.md docs/new.md')).toEqual([
-      `${CWD}/docs/new.md`,
-    ]);
+    expect(collect('mv docs/old.md docs/new.md')).toEqual([`${CWD}/docs/new.md`]);
   });
 
   it('複製先がディレクトリのときは、対象にならないこと', () => {
@@ -91,12 +79,7 @@ describe('作業ディレクトリと変数の解決', () => {
   });
 
   it('同じコマンド内で代入された変数を展開すること', () => {
-    const command = [
-      'S=/Users/tester/scratch',
-      'cat > "$S/note.md" <<EOF',
-      'x',
-      'EOF',
-    ].join('\n');
+    const command = ['S=/Users/tester/scratch', 'cat > "$S/note.md" <<EOF', 'x', 'EOF'].join('\n');
 
     expect(collect(command)).toEqual(['/Users/tester/scratch/note.md']);
   });
@@ -108,9 +91,7 @@ describe('作業ディレクトリと変数の解決', () => {
   });
 
   it('空白を含むパスが引用符で囲まれていれば対象になること', () => {
-    expect(collect(`sed -i '' 's/a/b/' "docs/my notes.md"`)).toEqual([
-      `${CWD}/docs/my notes.md`,
-    ]);
+    expect(collect(`sed -i '' 's/a/b/' "docs/my notes.md"`)).toEqual([`${CWD}/docs/my notes.md`]);
   });
 
   it('値の分からない変数を含むパスは対象にしないこと', () => {

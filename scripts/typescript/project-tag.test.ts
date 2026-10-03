@@ -14,10 +14,7 @@ describe('調査ログのプロジェクト識別', () => {
     const result = projectDirs.map(sut);
 
     // Assert
-    expect(result).toEqual([
-      'claude-code-changelog-viewer',
-      'claude-code-changelog-viewer',
-    ]);
+    expect(result).toEqual(['claude-code-changelog-viewer', 'claude-code-changelog-viewer']);
   });
 
   it('WSLからWindows側のリポジトリを開いてもディレクトリ名がタグになること', () => {

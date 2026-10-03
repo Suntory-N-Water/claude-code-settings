@@ -31,9 +31,7 @@ function stopInput(lastAssistantMessage: string, stopHookActive = false) {
 
 describe('textlint Stop hook', () => {
   test('返答に指摘があればターンを差し戻す', async () => {
-    const { exitCode, stdout } = await runHook(
-      stopInput('この構成が効くかどうかを確かめます。'),
-    );
+    const { exitCode, stdout } = await runHook(stopInput('この構成が効くかどうかを確かめます。'));
 
     expect(exitCode).toBe(0);
     expect(JSON.parse(stdout)).toMatchObject({
@@ -43,18 +41,14 @@ describe('textlint Stop hook', () => {
   });
 
   test('指摘がなければ何も返さない', async () => {
-    const { exitCode, stdout } = await runHook(
-      stopInput('設定を書き換えました。'),
-    );
+    const { exitCode, stdout } = await runHook(stopInput('設定を書き換えました。'));
 
     expect(exitCode).toBe(0);
     expect(stdout).not.toContain('block');
   });
 
   test('差し戻し後の再実行では止めない', async () => {
-    const { stdout } = await runHook(
-      stopInput('この構成が効くかどうかを確かめます。', true),
-    );
+    const { stdout } = await runHook(stopInput('この構成が効くかどうかを確かめます。', true));
 
     expect(stdout).not.toContain('block');
   });
@@ -66,9 +60,7 @@ describe('textlint Stop hook', () => {
   });
 
   test('コードブロックの中は検査しない', async () => {
-    const { stdout } = await runHook(
-      stopInput('次のとおりです。\n\n```\nこの設定が効く\n```\n'),
-    );
+    const { stdout } = await runHook(stopInput('次のとおりです。\n\n```\nこの設定が効く\n```\n'));
 
     expect(stdout).not.toContain('block');
   });

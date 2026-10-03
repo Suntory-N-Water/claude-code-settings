@@ -59,8 +59,7 @@ export const wordRules = [
     id: 'preview',
     category: '予告',
     severity: 'warning',
-    pattern:
-      /重要なのは[^。]{0,60}である|ここでは[^。]{0,60}について見ていく|本章では/u,
+    pattern: /重要なのは[^。]{0,60}である|ここでは[^。]{0,60}について見ていく|本章では/u,
     good: '予告を削って主張から書く。例:「評価の中心は、正しさを誰が知っているかにある」',
   },
   {
@@ -83,8 +82,7 @@ export const wordRules = [
     id: 'jargon-contract',
     category: '過去の指摘',
     severity: 'warning',
-    pattern:
-      /(?<!雇用|賃貸|売買|保険|派遣|業務委託|請負)契約(?![書者社金期解満更条]|を結|を交)/u,
+    pattern: /(?<!雇用|賃貸|売買|保険|派遣|業務委託|請負)契約(?![書者社金期解満更条]|を結|を交)/u,
     good: '入出力の取り決めをそのまま書く。例:「引数は文字列、戻り値は件数」「型定義が入出力の形を決めている」。人や会社と結ぶ契約は残してよい',
   },
   {
@@ -108,24 +106,21 @@ export const wordRules = [
     id: 'jargon-surface',
     category: '過去の指摘',
     severity: 'warning',
-    pattern:
-      /(?:公開|攻撃|接触|操作|設定|拡張|互換|境界|入出力)面(?![積白倒])/u,
+    pattern: /(?:公開|攻撃|接触|操作|設定|拡張|互換|境界|入出力)面(?![積白倒])/u,
     good: '利用者から見える範囲をそのまま書く。例:「外部に出す関数は 2 つだけ」「利用者が触る設定項目」。物体の面や図形の面は残してよい',
   },
   {
     id: 'jargon-role',
     category: '過去の指摘',
     severity: 'warning',
-    pattern:
-      /(?<!主|脇|悪|大|端|配|重|現|兵|使|締|三|荷|通)役(?![割立所員場者職目柄種]|に立)/u,
+    pattern: /(?<!主|脇|悪|大|端|配|重|現|兵|使|締|三|荷|通)役(?![割立所員場者職目柄種]|に立)/u,
     good: '何をする処理かをそのまま書く。例:「Pod へ転送するプロセス」「名前から IP を引く仕組み」。演劇や配役の意味は残してよい',
   },
   {
     id: 'jargon-run',
     category: '過去の指摘',
     severity: 'warning',
-    pattern:
-      /(?<!手|首|体|腕|目|背|針|独楽|コマ|ハンドル|ネジ|ねじ|時計)を回[さしすせそ]/u,
+    pattern: /(?<!手|首|体|腕|目|背|針|独楽|コマ|ハンドル|ネジ|ねじ|時計)を回[さしすせそ]/u,
     good: '実行をそのまま書く。例:「テストを実行する」「CI で毎回動かす」。物を回転させる意味は残してよい',
   },
   {
@@ -200,16 +195,14 @@ export const wordRules = [
     id: 'ai-grandiose',
     category: '大げさな熟語',
     severity: 'severe',
-    pattern:
-      /真理|境地|虚飾|深淵|禁欲的|冷徹|美学|結晶(?![化構水析])|優美|極致|宿命/u,
+    pattern: /真理|境地|虚飾|深淵|禁欲的|冷徹|美学|結晶(?![化構水析])|優美|極致|宿命/u,
     good: '普通の感想を普通の語で書く。例:「使いにくかった」「思ったより速い」',
   },
   {
     id: 'translationese-verb',
     category: '翻訳調の動詞',
     severity: 'severe',
-    pattern:
-      /示唆|物語っている|(?<!水面に|空に|海面に)浮かび上が|収斂|同じ方向を指し/u,
+    pattern: /示唆|物語っている|(?<!水面に|空に|海面に)浮かび上が|収斂|同じ方向を指し/u,
     good: '誰が何をしたかを書く。例:「この計測では 3 件が失敗した」「同じ設定で 2 回とも落ちた」',
   },
   {
@@ -261,8 +254,7 @@ export const wordRules = [
     id: 'disclaimer-ritual',
     category: '言い訳',
     severity: 'severe',
-    pattern:
-      /あくまで一例|個人差があ|(?:すべて|全て).{0,10}当てはまるわけでは/u,
+    pattern: /あくまで一例|個人差があ|(?:すべて|全て).{0,10}当てはまるわけでは/u,
     good: '予防線を削る。条件があるなら条件をそのまま書く。例:「bun 1.4 で確認した」',
   },
   {
@@ -380,8 +372,7 @@ export const wordRules = [
     id: 'filler-preface',
     category: '前置き',
     severity: 'severe',
-    pattern:
-      /正直に言うと|避けたいのは|注目すべきは|面白いのはここ|というわけです/u,
+    pattern: /正直に言うと|避けたいのは|注目すべきは|面白いのはここ|というわけです/u,
     good: '前置きを削り、主張を主文で書く。例:「避けたいのは再試行の重複です」→「再試行を重複させない設定にします」',
   },
   {
@@ -532,9 +523,7 @@ export interface Violation {
   good: string;
 }
 
-export function documentRule<Id extends DocumentRuleId>(
-  id: Id,
-): DocumentRule & { id: Id } {
+export function documentRule<Id extends DocumentRuleId>(id: Id): DocumentRule & { id: Id } {
   return { id, ...documentRules[id] };
 }
 

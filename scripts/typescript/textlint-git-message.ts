@@ -2,11 +2,7 @@
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import type { TextlintResult } from '@textlint/types';
 import { defineHook } from 'cc-hooks-ts';
-import {
-  collectMessageTargets,
-  type MessageTarget,
-  stripTrailers,
-} from './git-message-targets.ts';
+import { collectMessageTargets, type MessageTarget, stripTrailers } from './git-message-targets.ts';
 
 const ROOT = dirname(dirname(import.meta.dir));
 const MAX_REPORTED_FINDINGS = 8;
@@ -15,10 +11,7 @@ const JAPANESE = /[ぁ-んァ-ヶ一-龠]/u;
 // git commit と gh pr / gh issue を含む見込みのないコマンドはここで落とす
 const MAYBE_TARGET = /\bgit\b[\s\S]*\bcommit\b|\bgh\b[\s\S]*\b(?:pr|issue)\b/u;
 
-type Finding = Pick<
-  TextlintResult['messages'][number],
-  'ruleId' | 'message' | 'line' | 'column'
->;
+type Finding = Pick<TextlintResult['messages'][number], 'ruleId' | 'message' | 'line' | 'column'>;
 
 type Linter = {
   lintText(text: string, filePath: string): Promise<TextlintResult>;
@@ -63,9 +56,7 @@ async function resolveTarget(
     return undefined;
   }
   const text = stripTrailers(await file.text());
-  return text === ''
-    ? undefined
-    : { label: target.label, format: target.format, text };
+  return text === '' ? undefined : { label: target.label, format: target.format, text };
 }
 
 export function formatReport(

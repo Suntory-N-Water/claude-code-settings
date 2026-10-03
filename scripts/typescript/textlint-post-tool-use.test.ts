@@ -51,9 +51,7 @@ describe('textlint PostToolUse hook', () => {
     const filePath = join(workspace, 'new.md');
     const content = 'この機能を処理の入口として使います。\n';
     await writeFile(filePath, content);
-    const { exitCode, stdout } = await runHook(
-      postToolInput('Write', filePath, { content }),
-    );
+    const { exitCode, stdout } = await runHook(postToolInput('Write', filePath, { content }));
 
     expect(exitCode).toBe(0);
     expect(JSON.parse(stdout)).toMatchObject({
@@ -68,9 +66,7 @@ describe('textlint PostToolUse hook', () => {
     const filePath = join(workspace, 'new.md');
     const content = 'この機能を処理の入口として使います。\n';
     await writeFile(filePath, content);
-    const { stdout } = await runHook(
-      postToolInput('Write', filePath, { content }),
-    );
+    const { stdout } = await runHook(postToolInput('Write', filePath, { content }));
 
     expect(stdout).not.toContain('permissionDecision');
   });
@@ -131,8 +127,6 @@ describe('textlint hook helpers', () => {
       { ...existing, line: 4 },
     ];
 
-    expect(introducedFindings([existing], after)).toEqual([
-      { ...existing, line: 4 },
-    ]);
+    expect(introducedFindings([existing], after)).toEqual([{ ...existing, line: 4 }]);
   });
 });

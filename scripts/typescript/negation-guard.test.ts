@@ -40,9 +40,7 @@ describe('否定形を含む指示への注入', () => {
   });
 
   it('引用行だけに否定形があるとき、何も返らないこと', () => {
-    const prompt = ['> 東坡肉を加えないでください', 'これは引用です。'].join(
-      '\n',
-    );
+    const prompt = ['> 東坡肉を加えないでください', 'これは引用です。'].join('\n');
 
     const result = reminderFor(prompt);
 

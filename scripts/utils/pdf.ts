@@ -29,8 +29,7 @@ const MARGIN_RATIO = 0.1;
 // 章ごとにヘッダーが変わる文書もあるため、全ページ数に対する割合ではなく固定のページ数で判定する。
 // 出現ページ数がこれ未満の行は、余白にあっても本文の一部として残す
 const MIN_RUNNING_LINE_PAGES = 5;
-const PAGE_NUMBER =
-  /^[-－‐―\s(（<〈[［]*(?:[0-9０-９]+|[ivxlcIVXLCⅰ-ⅻⅠ-Ⅻ]+)[-－‐―\s)）>〉\]］]*$/u;
+const PAGE_NUMBER = /^[-－‐―\s(（<〈[［]*(?:[0-9０-９]+|[ivxlcIVXLCⅰ-ⅻⅠ-Ⅻ]+)[-－‐―\s)）>〉\]］]*$/u;
 // 右端がこの幅 (文字サイズの倍数) 以内に収まる行は、右端まで届いているとみなす
 const RIGHT_EDGE_TOLERANCE = 2;
 const MIN_LINES_FOR_EDGE = 3;
@@ -87,11 +86,9 @@ function mergeSameRowLines(lines: PdfLine[]): PdfLine[] {
 
 function removeRunningLines(lines: PdfLine[]): PdfLine[] {
   const inMargin = (line: PdfLine) =>
-    line.top < line.pageHeight * MARGIN_RATIO ||
-    line.bottom > line.pageHeight * (1 - MARGIN_RATIO);
+    line.top < line.pageHeight * MARGIN_RATIO || line.bottom > line.pageHeight * (1 - MARGIN_RATIO);
   // ページ番号はページごとに数字だけが変わるため、数字を伏せて同じ行とみなす
-  const keyOf = (line: PdfLine) =>
-    line.text.replace(/[0-9０-９]+/g, '#').replace(/\s/g, '');
+  const keyOf = (line: PdfLine) => line.text.replace(/[0-9０-９]+/g, '#').replace(/\s/g, '');
 
   const pagesByKey = new Map<string, Set<number>>();
   for (const line of lines.filter(inMargin)) {
@@ -116,32 +113,24 @@ function detectBodySize(lines: PdfLine[]): number {
   return [...charsBySize].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 0;
 }
 
-function detectHeadingLevels(
-  lines: PdfLine[],
-  bodySize: number,
-): Map<number, number> {
+function detectHeadingLevels(lines: PdfLine[], bodySize: number): Map<number, number> {
   const sizes = [
     ...new Set(
       lines
         .filter(
           (line) =>
-            line.size >= bodySize * HEADING_SIZE_RATIO &&
-            line.text.length <= MAX_HEADING_LENGTH,
+            line.size >= bodySize * HEADING_SIZE_RATIO && line.text.length <= MAX_HEADING_LENGTH,
         )
         .map((line) => Math.round(line.size)),
     ),
   ].sort((a, b) => b - a);
-  return new Map(
-    sizes.map((size, i) => [size, Math.min(i + 1, MAX_HEADING_LEVEL)]),
-  );
+  return new Map(sizes.map((size, i) => [size, Math.min(i + 1, MAX_HEADING_LEVEL)]));
 }
 
 export function pdfLinesToMarkdown(allLines: PdfLine[]): string {
   const bodySize = detectBodySize(allLines);
   const lines = removeRunningLines(
-    mergeSameRowLines(
-      allLines.filter((line) => line.size >= bodySize * RUBY_SIZE_RATIO),
-    ),
+    mergeSameRowLines(allLines.filter((line) => line.size >= bodySize * RUBY_SIZE_RATIO)),
   );
   const headingLevels = detectHeadingLevels(lines, bodySize);
 
@@ -155,30 +144,20 @@ export function pdfLinesToMarkdown(allLines: PdfLine[]): string {
     if (Math.round(line.size) !== bodySize) {
       continue;
     }
-    bodyLineCountByPage.set(
-      line.page,
-      (bodyLineCountByPage.get(line.page) ?? 0) + 1,
-    );
+    bodyLineCountByPage.set(line.page, (bodyLineCountByPage.get(line.page) ?? 0) + 1);
     minRightByPage.set(
       line.page,
       Math.min(minRightByPage.get(line.page) ?? line.right, line.right),
     );
-    leftEdgeByPage.set(
-      line.page,
-      Math.min(leftEdgeByPage.get(line.page) ?? line.left, line.left),
-    );
-    rightEdgeByPage.set(
-      line.page,
-      Math.max(rightEdgeByPage.get(line.page) ?? 0, line.right),
-    );
+    leftEdgeByPage.set(line.page, Math.min(leftEdgeByPage.get(line.page) ?? line.left, line.left));
+    rightEdgeByPage.set(line.page, Math.max(rightEdgeByPage.get(line.page) ?? 0, line.right));
   }
   const continues = (prev: PdfLine, line: PdfLine) => {
     if (
       line.indented ||
       LIST_MARKER.test(line.text) ||
       (line.page !== prev.page && line.page !== prev.page + 1) ||
-      Math.abs(line.size - prev.size) >
-        Math.max(line.size, prev.size) * SIZE_TOLERANCE
+      Math.abs(line.size - prev.size) > Math.max(line.size, prev.size) * SIZE_TOLERANCE
     ) {
       return false;
     }
@@ -257,9 +236,7 @@ export async function extractPdfMarkdown(
       for (const raw of json.blocks.flatMap((block) => block.lines ?? [])) {
         const text = raw.text.trim();
         const rotated =
-          raw.wmode === 0 &&
-          text.length > 2 &&
-          raw.bbox.h > raw.bbox.w * ROTATED_ASPECT_RATIO;
+          raw.wmode === 0 && text.length > 2 && raw.bbox.h > raw.bbox.w * ROTATED_ASPECT_RATIO;
         if (text.length === 0 || rotated) {
           continue;
         }

@@ -28,9 +28,7 @@ async function runHook(command: string): Promise<{
 
 describe('git / gh のメッセージを検査する PreToolUse hook', () => {
   test('コミットメッセージに指摘があれば実行を止めること', async () => {
-    const { exitCode, stdout } = await runHook(
-      'git commit -m "fix: この設定が効くようにする"',
-    );
+    const { exitCode, stdout } = await runHook('git commit -m "fix: この設定が効くようにする"');
 
     expect(exitCode).toBe(0);
     expect(JSON.parse(stdout)).toMatchObject({
@@ -39,9 +37,9 @@ describe('git / gh のメッセージを検査する PreToolUse hook', () => {
         permissionDecisionReason: expect.stringContaining('効く'),
       },
     });
-    expect(
-      JSON.parse(stdout).hookSpecificOutput.permissionDecisionReason,
-    ).toContain('コミットメッセージ');
+    expect(JSON.parse(stdout).hookSpecificOutput.permissionDecisionReason).toContain(
+      'コミットメッセージ',
+    );
   });
 
   test('PR の本文に指摘があれば実行を止めること', async () => {
@@ -49,27 +47,21 @@ describe('git / gh のメッセージを検査する PreToolUse hook', () => {
       `gh pr create --title "fix: 設定を直す" --body "$(cat <<'EOF'\n## 概要\n\nこの設定が効くようにした。\nEOF\n)"`,
     );
 
-    const reason = JSON.parse(stdout).hookSpecificOutput
-      .permissionDecisionReason as string;
+    const reason = JSON.parse(stdout).hookSpecificOutput.permissionDecisionReason as string;
     expect(reason).toContain('PR の本文');
     expect(reason).toContain('効く');
   });
 
   test('Issue のコメントに指摘があれば実行を止めること', async () => {
-    const { stdout } = await runHook(
-      'gh issue comment 12 --body "この設定が効くようにした。"',
-    );
+    const { stdout } = await runHook('gh issue comment 12 --body "この設定が効くようにした。"');
 
-    const reason = JSON.parse(stdout).hookSpecificOutput
-      .permissionDecisionReason as string;
+    const reason = JSON.parse(stdout).hookSpecificOutput.permissionDecisionReason as string;
     expect(reason).toContain('Issue のコメント');
     expect(reason).toContain('効く');
   });
 
   test('指摘がなければ実行を止めないこと', async () => {
-    const { exitCode, stdout } = await runHook(
-      'git commit -m "fix: 設定の読み込み順を直す"',
-    );
+    const { exitCode, stdout } = await runHook('git commit -m "fix: 設定の読み込み順を直す"');
 
     expect(exitCode).toBe(0);
     expect(stdout).not.toContain('deny');
@@ -88,12 +80,8 @@ describe('git / gh のメッセージを検査する PreToolUse hook', () => {
   });
 
   test('読み取りだけの gh コマンドは対象にしないこと', async () => {
-    expect(
-      (await runHook('gh pr view 5 --json title,body')).stdout,
-    ).not.toContain('deny');
-    expect((await runHook('gh issue view 12 --comments')).stdout).not.toContain(
-      'deny',
-    );
+    expect((await runHook('gh pr view 5 --json title,body')).stdout).not.toContain('deny');
+    expect((await runHook('gh issue view 12 --comments')).stdout).not.toContain('deny');
   });
 
   test('存在しない --body-file は検査せず実行を止めないこと', async () => {

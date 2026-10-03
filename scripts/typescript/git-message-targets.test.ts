@@ -17,9 +17,7 @@ describe('git commit のメッセージ抽出', () => {
   });
 
   test('-m を並べたとき、空行で連結した 1 つのメッセージになること', () => {
-    const targets = collectMessageTargets(
-      'git commit -m "feat: 件名" -m "本文の説明。"',
-    );
+    const targets = collectMessageTargets('git commit -m "feat: 件名" -m "本文の説明。"');
 
     expect(targets).toHaveLength(1);
     expect(targets[0]?.source).toEqual({
@@ -57,9 +55,7 @@ describe('git commit のメッセージ抽出', () => {
   });
 
   test('-F- と続けて書いても、ヒアドキュメントの中身が対象になること', () => {
-    const targets = collectMessageTargets(
-      "git commit -F- <<'EOF'\nfix: 件名\nEOF",
-    );
+    const targets = collectMessageTargets("git commit -F- <<'EOF'\nfix: 件名\nEOF");
 
     expect(targets[0]?.source).toEqual({ kind: 'text', text: 'fix: 件名' });
   });
@@ -96,18 +92,12 @@ describe('git commit のメッセージ抽出', () => {
   });
 
   test('rtk を前置しても対象になること', () => {
-    expect(collectMessageTargets('rtk git commit -m "fix: 件名"')).toHaveLength(
-      1,
-    );
-    expect(
-      collectMessageTargets('rtk proxy git commit -m "fix: 件名"'),
-    ).toHaveLength(1);
+    expect(collectMessageTargets('rtk git commit -m "fix: 件名"')).toHaveLength(1);
+    expect(collectMessageTargets('rtk proxy git commit -m "fix: 件名"')).toHaveLength(1);
   });
 
   test('-C で作業ディレクトリを指定しても対象になること', () => {
-    expect(
-      collectMessageTargets('git -C /tmp/repo commit -m "fix: 件名"'),
-    ).toHaveLength(1);
+    expect(collectMessageTargets('git -C /tmp/repo commit -m "fix: 件名"')).toHaveLength(1);
   });
 
   test('定型の署名行は対象から外れること', () => {
@@ -127,15 +117,11 @@ describe('git commit のメッセージ抽出', () => {
   });
 
   test('commit 以外のサブコマンドは対象にならないこと', () => {
-    expect(
-      collectMessageTargets('git log --grep="効く" --oneline -m 5'),
-    ).toEqual([]);
+    expect(collectMessageTargets('git log --grep="効く" --oneline -m 5')).toEqual([]);
   });
 
   test('展開できないコマンド置換は対象にならないこと', () => {
-    expect(collectMessageTargets('git commit -m "$(build_message)"')).toEqual(
-      [],
-    );
+    expect(collectMessageTargets('git commit -m "$(build_message)"')).toEqual([]);
     expect(collectMessageTargets('git commit -m "$MESSAGE"')).toEqual([]);
   });
 });
@@ -162,9 +148,7 @@ describe('gh pr のタイトルと本文の抽出', () => {
 
   test('--body-file にパスを渡したとき、そのファイルが対象になること', () => {
     expect(
-      collectMessageTargets(
-        'gh pr create --title "件名" --body-file /tmp/body.md',
-      ),
+      collectMessageTargets('gh pr create --title "件名" --body-file /tmp/body.md'),
     ).toContainEqual({
       label: 'PR の本文',
       format: 'markdown',
@@ -173,21 +157,17 @@ describe('gh pr のタイトルと本文の抽出', () => {
   });
 
   test('edit の本文が対象になること', () => {
-    expect(collectMessageTargets('gh pr edit 3 --body "説明を直す。"')).toEqual(
-      [
-        {
-          label: 'PR の本文',
-          format: 'markdown',
-          source: { kind: 'text', text: '説明を直す。' },
-        },
-      ],
-    );
+    expect(collectMessageTargets('gh pr edit 3 --body "説明を直す。"')).toEqual([
+      {
+        label: 'PR の本文',
+        format: 'markdown',
+        source: { kind: 'text', text: '説明を直す。' },
+      },
+    ]);
   });
 
   test('comment の本文はコメントとして対象になること', () => {
-    expect(
-      collectMessageTargets('gh pr comment 3 --body "確認した。"'),
-    ).toEqual([
+    expect(collectMessageTargets('gh pr comment 3 --body "確認した。"')).toEqual([
       {
         label: 'PR のコメント',
         format: 'markdown',
@@ -202,21 +182,15 @@ describe('gh pr のタイトルと本文の抽出', () => {
   });
 
   test('pr / issue 以外のリソースは対象にならないこと', () => {
-    expect(
-      collectMessageTargets('gh release create v1.0.0 --notes "説明。"'),
-    ).toEqual([]);
-    expect(
-      collectMessageTargets('gh repo create sample --description "説明。"'),
-    ).toEqual([]);
+    expect(collectMessageTargets('gh release create v1.0.0 --notes "説明。"')).toEqual([]);
+    expect(collectMessageTargets('gh repo create sample --description "説明。"')).toEqual([]);
   });
 });
 
 describe('gh issue のタイトルと本文の抽出', () => {
   test('create のタイトルと本文が Issue として対象になること', () => {
     expect(
-      collectMessageTargets(
-        'gh issue create --title "検出層を足す" --body "## 背景\n\n説明。"',
-      ),
+      collectMessageTargets('gh issue create --title "検出層を足す" --body "## 背景\n\n説明。"'),
     ).toEqual([
       {
         label: 'Issue のタイトル',
@@ -244,9 +218,7 @@ describe('gh issue のタイトルと本文の抽出', () => {
   });
 
   test('comment の本文はコメントとして対象になること', () => {
-    expect(
-      collectMessageTargets('gh issue comment 12 --body "対応した。"'),
-    ).toEqual([
+    expect(collectMessageTargets('gh issue comment 12 --body "対応した。"')).toEqual([
       {
         label: 'Issue のコメント',
         format: 'markdown',
@@ -256,9 +228,7 @@ describe('gh issue のタイトルと本文の抽出', () => {
   });
 
   test('edit の本文が対象になること', () => {
-    expect(
-      collectMessageTargets('gh issue edit 12 --body "説明を直す。"'),
-    ).toEqual([
+    expect(collectMessageTargets('gh issue edit 12 --body "説明を直す。"')).toEqual([
       {
         label: 'Issue の本文',
         format: 'markdown',

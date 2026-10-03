@@ -1,11 +1,4 @@
-import {
-  afterAll,
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from 'bun:test';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -94,20 +87,13 @@ async function writeSourceMarkdown(
   return path;
 }
 
-async function writeComments(
-  root: string,
-  name: string,
-  comments: CommentsFile,
-): Promise<string> {
+async function writeComments(root: string, name: string, comments: CommentsFile): Promise<string> {
   const path = join(root, name);
   await writeCommentsFile(path, comments);
   return path;
 }
 
-async function writeBrokenComments(
-  root: string,
-  name: string,
-): Promise<string> {
+async function writeBrokenComments(root: string, name: string): Promise<string> {
   const path = join(root, name);
   await Bun.write(path, '{ 壊れた JSON');
   return path;

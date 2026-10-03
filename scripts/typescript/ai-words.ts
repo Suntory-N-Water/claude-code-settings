@@ -31,10 +31,7 @@ async function runLint(texts: string[]): Promise<void> {
 
   for (const text of texts) {
     process.stdout.write(`# ${text}\n`);
-    const result = await linter.lintText(
-      text,
-      join(ROOT, 'ai-words-sample.md'),
-    );
+    const result = await linter.lintText(text, join(ROOT, 'ai-words-sample.md'));
     if (result.messages.length === 0) {
       process.stdout.write('指摘なし\n');
       continue;

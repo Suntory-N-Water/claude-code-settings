@@ -45,11 +45,7 @@ async function writeMarkdown(name: string, text: string): Promise<string> {
 }
 
 function write(filePath: string, writtenText: string) {
-  return decideWrite(
-    { filePath, writtenText, sessionId: SESSION_ID },
-    store,
-    warnings,
-  );
+  return decideWrite({ filePath, writtenText, sessionId: SESSION_ID }, store, warnings);
 }
 
 describe('書き込み直後の検査', () => {
@@ -135,9 +131,7 @@ describe('書き込み直後の検査', () => {
   describe('繰り返す警告の抑制', () => {
     test('同じ文書レベルの警告が続けて検出された時、2 回目は報告しないこと', async () => {
       const filePath = await writeMarkdown('a.md', REPEATED_ENDING);
-      expect(await write(filePath, REPEATED_ENDING)).toContain(
-        REPEATED_ENDING_REPORT,
-      );
+      expect(await write(filePath, REPEATED_ENDING)).toContain(REPEATED_ENDING_REPORT);
 
       const reason = await write(filePath, REPEATED_ENDING);
 
@@ -158,11 +152,7 @@ describe('書き込み直後の検査', () => {
     test('対象文が書き換わって別の警告になった時、報告すること', async () => {
       const filePath = await writeMarkdown('a.md', REPEATED_ENDING);
       await write(filePath, REPEATED_ENDING);
-      const rewritten = [
-        '入力を検証します。',
-        '結果を保存します。',
-        '通知を送ります。',
-      ].join('\n');
+      const rewritten = ['入力を検証します。', '結果を保存します。', '通知を送ります。'].join('\n');
       await Bun.write(filePath, rewritten);
 
       const reason = await write(filePath, rewritten);
@@ -173,10 +163,7 @@ describe('書き込み直後の検査', () => {
     test('一度消えた警告が書き戻されて再び現れた時、報告すること', async () => {
       const filePath = await writeMarkdown('a.md', REPEATED_ENDING);
       await write(filePath, REPEATED_ENDING);
-      const broken = REPEATED_ENDING.replace(
-        '次に一覧を作ります。',
-        '次に一覧を作りました。',
-      );
+      const broken = REPEATED_ENDING.replace('次に一覧を作ります。', '次に一覧を作りました。');
       await Bun.write(filePath, broken);
       expect(await write(filePath, broken)).toBeUndefined();
       await Bun.write(filePath, REPEATED_ENDING);
@@ -212,9 +199,7 @@ describe('書き込み直後の検査', () => {
 
       await write(filePath, body);
 
-      expect(await store.read(SESSION_ID)).toEqual([
-        { filePath, sentences: [POLITE_SEVERE] },
-      ]);
+      expect(await store.read(SESSION_ID)).toEqual([{ filePath, sentences: [POLITE_SEVERE] }]);
     });
   });
 
@@ -224,9 +209,7 @@ describe('書き込み直後の検査', () => {
 
       await write(filePath, SEVERE);
 
-      expect(await store.read(SESSION_ID)).toEqual([
-        { filePath, sentences: [SEVERE] },
-      ]);
+      expect(await store.read(SESSION_ID)).toEqual([{ filePath, sentences: [SEVERE] }]);
     });
 
     test('警告だけの時、記録が残らないこと', async () => {

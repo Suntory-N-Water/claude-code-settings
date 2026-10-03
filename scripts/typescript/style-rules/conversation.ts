@@ -2,11 +2,7 @@ import { appendFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Violation } from './rules.ts';
 import { containsJapanese, toSentences } from './sanitize.ts';
-import {
-  type ReportedStore,
-  reportedStore,
-  storeRoot,
-} from './session-store.ts';
+import { type ReportedStore, reportedStore, storeRoot } from './session-store.ts';
 import { readTurnText } from './transcript.ts';
 import { checkWords } from './word-check.ts';
 
@@ -43,10 +39,7 @@ export function formatConversationReport(violations: Violation[]): string {
   // 1 文に複数の指摘が当たる。文ごとにまとめないと同じ文が何度も並ぶ
   const grouped = new Map<string, Violation[]>();
   for (const violation of violations) {
-    grouped.set(violation.sentence, [
-      ...(grouped.get(violation.sentence) ?? []),
-      violation,
-    ]);
+    grouped.set(violation.sentence, [...(grouped.get(violation.sentence) ?? []), violation]);
   }
 
   const shown = [...grouped.entries()].slice(0, MAX_SHOWN);
@@ -64,11 +57,7 @@ export function formatConversationReport(violations: Violation[]): string {
   return lines.join('\n');
 }
 
-async function appendLog(
-  root: string,
-  sessionId: string,
-  violations: Violation[],
-): Promise<void> {
+async function appendLog(root: string, sessionId: string, violations: Violation[]): Promise<void> {
   const timestamp = new Date().toISOString();
   const body = violations
     .map((violation) =>
@@ -119,9 +108,7 @@ async function inspect(
   await reported.write(input.sessionId, [...known].slice(-MAX_REPORTED));
   await appendLog(root, input.sessionId, violations);
 
-  const severe = violations.filter(
-    (violation) => violation.severity === 'severe',
-  );
+  const severe = violations.filter((violation) => violation.severity === 'severe');
   // 差し戻しは 1 ターンに一度だけにする。止め続けるとターンが終わらない
   if (severe.length === 0 || input.stopHookActive) {
     return undefined;

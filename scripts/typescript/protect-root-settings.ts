@@ -9,15 +9,7 @@ const PROTECTED_PATH = 'settings.json';
 // pathspec magic の :/ でリポジトリ直下に固定する (cwd がサブディレクトリでも、
 // また .claude/settings.json を巻き込まないため)
 const PROTECTED_PATHSPEC = ':/settings.json';
-const BULK_ADD_ARGS = new Set([
-  '.',
-  '-A',
-  '--all',
-  '-u',
-  '--update',
-  ':/',
-  '*',
-]);
+const BULK_ADD_ARGS = new Set(['.', '-A', '--all', '-u', '--update', ':/', '*']);
 
 function segments(command: string): string[] {
   return command.split(/&&|\|\||[;|\n]/).map((s) => s.trim());
@@ -47,11 +39,7 @@ function isGitSubcommand(args: string[], subcommand: string): boolean {
 
 // トークンを cwd 基準で解決し、リポジトリ直下の settings.json と一致するかを見る。
 // 文字列末尾での判定だと .claude/settings.json まで巻き込むため、絶対パスで比べる。
-function pointsAtProtected(
-  token: string,
-  cwd: string,
-  repoRoot: string,
-): boolean {
+function pointsAtProtected(token: string, cwd: string, repoRoot: string): boolean {
   if (token.startsWith('-')) {
     return false;
   }
@@ -71,41 +59,21 @@ async function git(cwd: string, args: string[]): Promise<string> {
 }
 
 async function isProtectedDirty(cwd: string): Promise<boolean> {
-  const out = await git(cwd, [
-    'status',
-    '--porcelain',
-    '--',
-    PROTECTED_PATHSPEC,
-  ]);
+  const out = await git(cwd, ['status', '--porcelain', '--', PROTECTED_PATHSPEC]);
   return out.trim().length > 0;
 }
 
 async function isProtectedStaged(cwd: string): Promise<boolean> {
-  const out = await git(cwd, [
-    'diff',
-    '--cached',
-    '--name-only',
-    '--',
-    PROTECTED_PATHSPEC,
-  ]);
+  const out = await git(cwd, ['diff', '--cached', '--name-only', '--', PROTECTED_PATHSPEC]);
   return out.trim().length > 0;
 }
 
 async function isProtectedUnpushed(cwd: string): Promise<boolean> {
-  const out = await git(cwd, [
-    'diff',
-    '--name-only',
-    '@{u}..HEAD',
-    '--',
-    PROTECTED_PATHSPEC,
-  ]);
+  const out = await git(cwd, ['diff', '--name-only', '@{u}..HEAD', '--', PROTECTED_PATHSPEC]);
   return out.trim().length > 0;
 }
 
-async function denyReason(
-  command: string,
-  cwd: string,
-): Promise<string | undefined> {
+async function denyReason(command: string, cwd: string): Promise<string | undefined> {
   const repoRoot = (await git(cwd, ['rev-parse', '--show-toplevel'])).trim();
   if (!repoRoot) {
     return undefined;
@@ -118,10 +86,7 @@ async function denyReason(
       if (args.some((a) => pointsAtProtected(a, cwd, repoRoot))) {
         return `${PROTECTED_PATH} を直接 add しようとしています`;
       }
-      if (
-        args.some((a) => BULK_ADD_ARGS.has(a)) &&
-        (await isProtectedDirty(cwd))
-      ) {
+      if (args.some((a) => BULK_ADD_ARGS.has(a)) && (await isProtectedDirty(cwd))) {
         return `一括 add で ${PROTECTED_PATH} が巻き込まれます。パスを明示して add してください`;
       }
     }

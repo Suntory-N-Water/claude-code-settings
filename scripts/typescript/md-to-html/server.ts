@@ -32,11 +32,7 @@ function resolveDocPath(doc: string): string | undefined {
     return undefined;
   }
   const normalized = normalize(doc);
-  if (
-    isAbsolute(normalized) ||
-    normalized === '..' ||
-    normalized.startsWith('../')
-  ) {
+  if (isAbsolute(normalized) || normalized === '..' || normalized.startsWith('../')) {
     return undefined;
   }
   return `${OUTPUT_ROOT}/${normalized}`;
@@ -44,9 +40,7 @@ function resolveDocPath(doc: string): string | undefined {
 
 export const app = new Hono();
 
-app.get('/api/health', (c) =>
-  c.json({ service: HEALTH_SERVICE_NAME, pid: process.pid }),
-);
+app.get('/api/health', (c) => c.json({ service: HEALTH_SERVICE_NAME, pid: process.pid }));
 
 app.get('/api/comments', async (c) => {
   const commentsPath = commentsPathFromQuery(c.req.query('doc'));

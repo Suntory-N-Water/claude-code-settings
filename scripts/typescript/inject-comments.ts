@@ -2,11 +2,7 @@
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { defineHook, runHook } from 'cc-hooks-ts';
 import { advanceBaselines } from './md-to-html/baseline.ts';
-import {
-  pruneOldSessions,
-  readInjectedIds,
-  recordInjectedIds,
-} from './md-to-html/session.ts';
+import { pruneOldSessions, readInjectedIds, recordInjectedIds } from './md-to-html/session.ts';
 import {
   formatUnresolvedComments,
   OUTPUT_ROOT,
@@ -47,16 +43,12 @@ export async function collect(
         continue;
       }
       // 一度全文を出したものは繰り返さない。内容は会話履歴に残っている
-      const annotations = unresolved.filter(
-        (annotation) => !injected.has(annotation.id),
-      );
+      const annotations = unresolved.filter((annotation) => !injected.has(annotation.id));
       if (annotations.length === 0) {
         continue;
       }
       const sourceFile = Bun.file(sourcePath);
-      const markdown = (await sourceFile.exists())
-        ? await sourceFile.text()
-        : undefined;
+      const markdown = (await sourceFile.exists()) ? await sourceFile.text() : undefined;
       report.entries.push({
         commentsPath,
         sourcePath,
@@ -87,9 +79,7 @@ const hook = defineHook({
       }
       await recordInjectedIds(
         sessionId,
-        report.entries.flatMap((entry) =>
-          entry.annotations.map((annotation) => annotation.id),
-        ),
+        report.entries.flatMap((entry) => entry.annotations.map((annotation) => annotation.id)),
       );
       await pruneOldSessions();
       return context.json({

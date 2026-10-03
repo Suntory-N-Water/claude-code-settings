@@ -88,10 +88,7 @@ const hook = defineHook({
       // /compact はセッション ID を引き継ぐ。記録を消さないと、
       // キャッシュを作り直した直後の入力を止めてしまう
       if (context.input.hook_event_name === 'SessionStart') {
-        if (
-          context.input.source === 'clear' ||
-          context.input.source === 'compact'
-        ) {
+        if (context.input.source === 'clear' || context.input.source === 'compact') {
           rmSync(path, { force: true });
         }
         return context.success({});

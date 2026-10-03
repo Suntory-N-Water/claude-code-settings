@@ -20,8 +20,7 @@ const NEGATIVE_PREDICATES = [
 ] as const;
 
 // 述語の直前に残る助詞。「とかは」のように重なるので、剥がれなくなるまで繰り返す
-const TRAILING_PARTICLES =
-  /(?:には|とか|など|まわり|周り|[はをにがものへとで])[\s、,]*$/u;
+const TRAILING_PARTICLES = /(?:には|とか|など|まわり|周り|[はをにがものへとで])[\s、,]*$/u;
 
 function stripParticles(text: string): string {
   let result = text.trimEnd();
@@ -108,9 +107,7 @@ export function negatedTerms(prompt: string): string[] {
 // 全文を肯定形で書く。ここで「〜に触れるな」と書くと、この注入自体が
 // 抑止したい再出現を引き起こす
 function buildReminder(terms: string[]): string {
-  const lines = [
-    '[作業制約] 直前の指示には、成果物の外側の条件が含まれています。',
-  ];
+  const lines = ['[作業制約] 直前の指示には、成果物の外側の条件が含まれています。'];
   if (terms.length > 0) {
     lines.push(`条件の対象: ${terms.map((term) => `「${term}」`).join(' ')}`);
   }

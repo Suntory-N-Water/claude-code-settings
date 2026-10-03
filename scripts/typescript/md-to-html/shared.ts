@@ -87,10 +87,7 @@ export async function readCommentsFile(path: string): Promise<CommentsFile> {
 // 同一ディレクトリの一時ファイルへ書いてから rename して置き換える。
 // 一時ファイル名にはプロセス内で一意な値も混ぜる(pid だけだと、同じプロセスの
 // 並行リクエスト同士が同じ一時ファイルを奪い合って rename に失敗する)
-export async function writeCommentsFile(
-  path: string,
-  comments: CommentsFile,
-): Promise<void> {
+export async function writeCommentsFile(path: string, comments: CommentsFile): Promise<void> {
   const tempPath = `${path}.${process.pid}.${crypto.randomUUID()}.tmp`;
   await Bun.write(tempPath, JSON.stringify(comments, null, 2));
   await rename(tempPath, path);
@@ -121,9 +118,7 @@ export function updateCommentsFile<T>(
 }
 
 export function unresolvedAnnotations(comments: CommentsFile): Annotation[] {
-  return comments.annotations.filter(
-    (annotation) => annotation.resolved !== true,
-  );
+  return comments.annotations.filter((annotation) => annotation.resolved !== true);
 }
 
 export interface UnresolvedEntry {
@@ -135,8 +130,7 @@ export interface UnresolvedEntry {
 }
 
 const QUOTE_LIMIT = 60;
-const RESOLVE_COMMAND =
-  'bun run --silent ~/.claude/scripts/typescript/resolve-comment.ts';
+const RESOLVE_COMMAND = 'bun run --silent ~/.claude/scripts/typescript/resolve-comment.ts';
 
 export interface UnresolvedReport {
   entries: UnresolvedEntry[];
@@ -149,16 +143,10 @@ export interface UnresolvedReport {
 
 function truncate(text: string): string {
   const collapsed = text.replace(/\s+/g, ' ').trim();
-  return collapsed.length > QUOTE_LIMIT
-    ? `${collapsed.slice(0, QUOTE_LIMIT)}…`
-    : collapsed;
+  return collapsed.length > QUOTE_LIMIT ? `${collapsed.slice(0, QUOTE_LIMIT)}…` : collapsed;
 }
 
-function formatAnnotation(
-  entry: UnresolvedEntry,
-  annotation: Annotation,
-  order: number,
-): string[] {
+function formatAnnotation(entry: UnresolvedEntry, annotation: Annotation, order: number): string[] {
   const path = entry.sourcePath;
   if (path === undefined || entry.markdown === undefined) {
     return [
@@ -178,10 +166,7 @@ function formatAnnotation(
       `   id: ${annotation.id}`,
     ];
   }
-  const lines = [
-    `${order}. @${path}:${located.line}`,
-    `   引用「${located.quote}」`,
-  ];
+  const lines = [`${order}. @${path}:${located.line}`, `   引用「${located.quote}」`];
   if (located.status === 'shifted') {
     lines.push(
       '   注意: 保存時の引用は現在の本文に一致しません。前後の文脈から現在の該当箇所を引用しています',
@@ -193,15 +178,10 @@ function formatAnnotation(
 }
 
 export function formatUnresolvedComments(report: UnresolvedReport): string {
-  const total = report.entries.reduce(
-    (sum, entry) => sum + entry.annotations.length,
-    0,
-  );
+  const total = report.entries.reduce((sum, entry) => sum + entry.annotations.length, 0);
   const lines: string[] = [];
   if (total > 0) {
-    lines.push(
-      `ユーザーが HTML ビュー上で書いた未対応のコメントが ${total} 件あります。`,
-    );
+    lines.push(`ユーザーが HTML ビュー上で書いた未対応のコメントが ${total} 件あります。`);
     for (const entry of report.entries) {
       lines.push('');
       lines.push(`コメントファイル: ${entry.commentsPath}`);
@@ -223,9 +203,7 @@ export function formatUnresolvedComments(report: UnresolvedReport): string {
     }
   }
   for (const path of report.unreadablePaths) {
-    lines.push(
-      `⚠ ${path} を読み込めませんでした。このファイルのコメントは提示されていません。`,
-    );
+    lines.push(`⚠ ${path} を読み込めませんでした。このファイルのコメントは提示されていません。`);
   }
   return lines.join('\n');
 }
@@ -233,9 +211,7 @@ export function formatUnresolvedComments(report: UnresolvedReport): string {
 // 編集によって位置を特定できなくなったコメントだけを知らせる。未対応コメントの
 // 全文は UserPromptSubmit 側が毎プロンプト注入するので、ここでは繰り返さない
 export function formatBrokenAnchors(entry: UnresolvedEntry): string {
-  const lines = [
-    `⚠ この編集でコメントのアンカーが壊れました (${entry.annotations.length} 件)`,
-  ];
+  const lines = [`⚠ この編集でコメントのアンカーが壊れました (${entry.annotations.length} 件)`];
   entry.annotations.forEach((annotation, index) => {
     lines.push(...formatAnnotation(entry, annotation, index + 1));
   });
