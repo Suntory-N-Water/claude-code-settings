@@ -18,12 +18,11 @@ function wordViolations(violations: Violation[]): Violation[] {
 
 // 語ルールと 1 対 1 で対応させる。例文の無いルールを足すと型検査が落ちる
 const hitCases = {
-  'empty-adjective-emphasis': ['型定義は核心的である。', '核心的'],
+  'empty-adjective-emphasis': ['型定義は鍵となる。', '鍵となる'],
   'empty-adjective-weak': ['型定義は不可欠である。', '不可欠'],
   'empty-adjective-coverage': ['多角的な検討を行う。', '多角的'],
   'front-facing': ['この前提を正面から回収する。', '正面から回収する'],
   // dash: ['設計—実装の順で進める。', '—'],
-  kikimasu: ['この設定が効きます。', '効き'],
   preview: ['本章では設計を扱う。', '本章では'],
   summary: ['まとめると、原因は設定である。', 'まとめると'],
   explore: ['この問題を探求する。', '探求する'],
@@ -42,10 +41,7 @@ const hitCases = {
   ],
   'jargon-projection': ['同期処理の射影も合わせる。', '射影'],
   'jargon-window': ['設定が食い違う窓が生まれる。', '窓'],
-  'jargon-skip': ['この手順を飛ばすと表示が壊れる。', '飛ばす'],
   'jargon-lottery': ['更新のたびに引き直すくじなので、いずれ引く。', 'くじ'],
-  'jargon-burn': ['ループ1回で240秒を焼く。', '焼く'],
-  'jargon-authority': ['設定の正本はこのファイルである。', '正本'],
   'jargon-contract': ['この関数の契約を決める。', '契約'],
   'jargon-promise': ['この API は順序を約束する。', '約束'],
   'jargon-wire': ['ハンドラを配線する。', '配線'],
@@ -79,25 +75,14 @@ const hitCases = {
   'invisible-char': ['設定を\u200B読み込む。', '\u200B'],
   'check-cross-mark': ['❌ 古い書き方を使う。', '❌'],
   'jargon-draw': ['全レシピから1件だけ引きます。', '1件だけ引き'],
-  'jargon-pitfall': ['この設定には落とし穴がある。', '落とし穴'],
+  'jargon-pitfall': ['この設定には落し穴がある。', '落し穴'],
   'jargon-block-off': ['これで両方の不具合を塞ぐ。', '塞ぐ'],
   'jargon-hit': ['Bash からコマンドを叩くしかない。', '叩く'],
-  'jargon-pass-through': ['この検査を素通りして保存される。', '素通り'],
   'jargon-magnitude': ['この方式は桁違いに速い。', '桁違い'],
   'jargon-mixup': ['引数を取り違えると別の行を消す。', '取り違え'],
-  'jargon-standard-move': ['ここは index を張るのが定石である。', '定石'],
-  'jargon-composition': [
-    '呼び出し元が握りつぶすという構図になる。',
-    'という構図',
-  ],
-  'jargon-tool': ['差分を確かめるための道具である。', 'ための道具'],
-  'jargon-entrance': ['この関数が処理の入口として置かれている。', '入口として'],
-  'jargon-silently': ['設定が合わないと静かに壊れる。', '静かに壊れ'],
-  'jargon-accident': ['本番データを消す事故が起きる。', '事故'],
-  'jargon-collapse': ['件数が増えるとこの前提が破綻する。', '破綻'],
+  'jargon-silently': ['設定が合わないと静かに失敗する。', '静かに失敗'],
   'jargon-tilt': ['迷ったら再試行しない側に倒す。', '側に倒す'],
   'jargon-let-escape': ['例外を上位へ逃がす。', '逃がす'],
-  'jargon-crush': ['残った不具合を 1 件ずつ潰す。', '潰す'],
   'jargon-boundary': ['ここが責務の境界になる。', 'の境界'],
 } as const satisfies Record<WordRuleId, readonly [string, string]>;
 
@@ -108,13 +93,6 @@ const hitRows: [string, string, string][] = Object.entries(hitCases).map(
 const missCases: [WordRuleId, string][] = [
   ['front-facing', '正面から取り組む。'],
   // ['dash', '設計-実装の順で進める。'],
-  ['kikimasu', '設定を変えた効果が出ている。'],
-  ['kikimasu', '実行の効率を測る。'],
-  ['kikimasu', 'この項目を有効化する。'],
-  ['kikimasu', 'キャッシュを無効にする。'],
-  ['kikimasu', '改正法が発効する。'],
-  ['kikimasu', '時効が成立した。'],
-  ['kikimasu', '実効性のある対策を選ぶ。'],
   ['preview', 'ここでは設定を確認する。'],
   ['connective-additive', 'また会う日まで待つ。'],
   ['connective-additive', 'これはまた、別の話である。'],
@@ -122,22 +100,16 @@ const missCases: [WordRuleId, string][] = [
   ['dismissive', 'カスタム設定を使う。'],
   ['jargon-window', '問い合わせ窓口に連絡する。'],
   ['jargon-window', '窓ガラスの寸法を測る。'],
-  ['jargon-skip', '鳥が空を飛んでいる。'],
   ['jargon-lottery', 'くじらの回遊経路を記録する。'],
   ['jargon-lottery', '足首をくじいて歩けなくなった。'],
   ['jargon-lottery', '心がくじけそうになる。'],
-  ['jargon-burn', 'CD を焼く。'],
-  ['jargon-burn', 'ROM に焼く。'],
-  ['jargon-burn', '画像を焼く。'],
-  ['jargon-burn', '日に焼ける。'],
-  ['jargon-burn', '設定をイメージに焼き込む。'],
-  ['jargon-burn', 'プロセスに焼き付いた環境変数が残る。'],
-  ['jargon-burn', 'キャッシュに型が焼かれる。'],
   ['jargon-contract', '雇用契約を確認する。'],
   ['jargon-contract', '契約書に署名する。'],
   ['jargon-promise', 'お約束の展開である。'],
   ['jargon-promise', '口約束で終わった。'],
   ['jargon-wire', '配線工事を依頼する。'],
+  ['jargon-wire', 'ハンドラをルーターに配線する。'],
+  ['jargon-wire', 'ハンドラをルーターに配線した。'],
   ['jargon-surface', '画面を確認する。'],
   ['jargon-surface', '断面積を計算する。'],
   ['jargon-role', '主役を務める。'],
@@ -173,17 +145,11 @@ const missCases: [WordRuleId, string][] = [
   ['katakana-jargon', 'ナレッジ共有の場を作る。'],
   ['cliche-closing', '結局のところ書きたい人が書く。'],
   ['translationese-verb', '浮き輪が水面に浮かび上がる。'],
-  ['jargon-accident', '交通事故の件数を調べる。'],
-  ['jargon-accident', '事故現場を撮影する。'],
-  ['jargon-collapse', '財政破綻した自治体を調べる。'],
   ['jargon-tilt', '本棚を手前に倒す。'],
   ['jargon-let-escape', '熱を逃がす穴を開ける。'],
-  ['jargon-crush', '待ち時間を潰す。'],
-  ['jargon-crush', '面目を潰す結果になった。'],
   ['jargon-boundary', 'テストの境界値を洗い出す。'],
   ['jargon-boundary', '土地の境界線を確かめる。'],
-  ['jargon-entrance', '建物の入口で待つ。'],
-  ['jargon-tool', '工具箱から道具を取り出す。'],
+  ['jargon-silently', '設定が静かに無視される。'],
 ];
 
 describe('語のルール', () => {
@@ -201,21 +167,6 @@ describe('語のルール', () => {
     const violations = await check(sentence);
 
     expect(ofRule(violations, ruleId)).toEqual([]);
-  });
-
-  // 「効きます」だけを見ていた頃は、同じ意味の他の活用形が素通りしていた
-  test.each([
-    ['この設定が効く。', '効く'],
-    ['キャッシュが効いている。', '効いて'],
-    ['再起動しても効いた。', '効いた'],
-    ['この指定は効かない。', '効かな'],
-    ['同じ手が効ける。', '効ける'],
-    ['ここで効けば十分である。', '効けば'],
-    ['この対策は効き目がある。', '効き'],
-  ])('%s のように活用させても kikimasu で検出されること', async (sentence, matched) => {
-    const violations = await check(sentence);
-
-    expect(ofRule(violations, 'kikimasu')[0]?.matched).toBe(matched);
   });
 
   test('罠と同じ扱いの語も同じルールで検出されること', async () => {
@@ -245,12 +196,12 @@ describe('語のルール', () => {
   });
 
   test('指摘に検出語・該当文・書き直し方が揃うこと', async () => {
-    const violations = await check('型定義は核心的である。');
+    const violations = await check('型定義は鍵となる。');
 
     expect(violations[0]).toMatchObject({
       severity: 'severe',
-      matched: '核心的',
-      sentence: '型定義は核心的である。',
+      matched: '鍵となる',
+      sentence: '型定義は鍵となる。',
     });
     expect(violations[0]?.good).not.toBe('');
   });
@@ -266,9 +217,9 @@ describe('語のルール', () => {
 
   test('同じ severe が 3 文に当たる時、打ち切らずに全て報告すること', async () => {
     const source = [
-      '型定義は核心的である。',
-      '設定ファイルは核心的である。',
-      '疎通確認は核心的である。',
+      '型定義は鍵となる。',
+      '設定ファイルは鍵となる。',
+      '疎通確認は鍵となる。',
     ].join('\n\n');
 
     const violations = await check(source);
@@ -294,7 +245,7 @@ describe('検査しない箇所', () => {
     const source = [
       '本文です。',
       '```ts',
-      'const label = "核心的";',
+      'const label = "鍵となる";',
       '```',
     ].join('\n');
 
@@ -304,7 +255,7 @@ describe('検査しない箇所', () => {
   });
 
   test('インラインコードで囲んだ禁止語を検出しないこと', async () => {
-    const violations = await check('設定の名前は `核心的` と書く。');
+    const violations = await check('設定の名前は `鍵となる` と書く。');
 
     expect(ofRule(violations, 'empty-adjective-emphasis')).toEqual([]);
   });
@@ -322,7 +273,7 @@ describe('検査しない箇所', () => {
   });
 
   test('フロントマターの中を検出しないこと', async () => {
-    const source = ['---', 'title: 核心的な話', '---', '本文です。'].join('\n');
+    const source = ['---', 'title: 鍵となる話', '---', '本文です。'].join('\n');
 
     const violations = await check(source);
 
@@ -330,7 +281,7 @@ describe('検査しない箇所', () => {
   });
 
   test('HTML コメントの中を検出しないこと', async () => {
-    const source = ['<!--', '核心的なメモ', '-->', '本文です。'].join('\n');
+    const source = ['<!--', '鍵となるメモ', '-->', '本文です。'].join('\n');
 
     const violations = await check(source);
 
@@ -338,7 +289,7 @@ describe('検査しない箇所', () => {
   });
 
   test('本文中の水平線より後も検査されること', async () => {
-    const source = ['前の文です。', '---', '型定義は核心的である。'].join('\n');
+    const source = ['前の文です。', '---', '型定義は鍵となる。'].join('\n');
 
     const violations = await check(source);
 
@@ -357,7 +308,7 @@ describe('検査しない箇所', () => {
 });
 
 describe('書いた範囲での絞り込み', () => {
-  const source = ['型定義は核心的である。', '結果を保存する。'].join('\n');
+  const source = ['型定義は鍵となる。', '結果を保存する。'].join('\n');
 
   test('差し替えた断片に無い語は報告しないこと', async () => {
     const violations = await check(source, '結果を保存する。');
@@ -366,7 +317,7 @@ describe('書いた範囲での絞り込み', () => {
   });
 
   test('差し替えた断片にある語は報告すること', async () => {
-    const violations = await check(source, '型定義は核心的である。');
+    const violations = await check(source, '型定義は鍵となる。');
 
     expect(ofRule(violations, 'empty-adjective-emphasis')).toHaveLength(1);
   });
@@ -571,12 +522,12 @@ describe('体言止め', () => {
 
 describe('重大度', () => {
   test('重大なルールに当たった文だけが重大として取り出せること', async () => {
-    const source = ['型定義は核心的である。', 'これは非常に速い。'].join('\n');
+    const source = ['型定義は鍵となる。', 'これは非常に速い。'].join('\n');
 
     const severe = severeViolations(await check(source));
 
     expect(severe.map((violation) => violation.sentence)).toEqual([
-      '型定義は核心的である。',
+      '型定義は鍵となる。',
     ]);
   });
 

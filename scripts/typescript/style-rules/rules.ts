@@ -15,17 +15,15 @@ export interface DocumentRule {
   readonly good: string;
 }
 
-export interface TextlintRule {
-  readonly category: string;
-  readonly severity: Severity;
-  readonly good: string;
-}
-
 // 語彙と閾値の一部は skill natural-japanese の scripts/lint.py の
 // コーパス校正(人間 103 文書 + AI 81 文書)に合わせている。skill は
 // skills-lock.json でハッシュ管理されているため、更新したら lint.py の
 // FORBIDDEN_PHRASES・FORBIDDEN_PHRASES_WEAK_SIGNAL・ANTITHESIS_* の差分を見る。
 // 対応時点のハッシュは 043db25ceb40d2bb1eec4e6c18605f02e2e6938773fb91cbce8381e5c1f447c5
+
+// .textlintrc.json の辞書(preset-ai-words-ja の同梱辞書と ai-words.json)が
+// 検出する語はここに置かない。両方に置くと同じ箇所が二度報告される。
+// textlint が一部の活用や形しか見ない語は、見ない形だけをここで検出する
 
 // 照合は 1 文ずつ行い g フラグを付けない。そのため `^` は文の先頭を指す
 export const wordRules = [
@@ -33,7 +31,7 @@ export const wordRules = [
     id: 'empty-adjective-emphasis',
     category: '空虚な形容',
     severity: 'severe',
-    pattern: /核心的?|鍵となる|根本的な/u,
+    pattern: /鍵となる|根本的な/u,
     good: '何が無いと何ができなくなるかを書く。例:「型定義が無いと tool_input の形が決まらない」',
   },
   {
@@ -66,13 +64,6 @@ export const wordRules = [
   //   pattern: /[—―─]/u,
   //   good: '言い換えは句点で二文に分けるか読点でつなぐ。見出しは単一の自然な句にする',
   // },
-  {
-    id: 'kikimasu',
-    category: '比喩の動詞',
-    severity: 'severe',
-    pattern: /効(?:く|き|い[てた]|かな|け[るば])/u,
-    good: '何がどう作用したかをそのまま書く。例:「ヘッダーが適用されています」「キャッシュで 2 回目が速くなる」',
-  },
   {
     id: 'preview',
     category: '予告',
@@ -182,35 +173,11 @@ export const wordRules = [
     good: '時間帯・期間・状態をそのまま書く。例:「設定とコードが食い違っている時間帯」「再ビルドが完了するまでの数分間」。建築や UI の実物の窓は残してよい',
   },
   {
-    id: 'jargon-skip',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /飛ば[さしすせそ]/u,
-    good: '省略・中断・不実行をそのまま書く。例:「実行しない」「省略する」「途中で終える」。物を空中へ移動させる意味(ボールを飛ばす)は残してよい',
-  },
-  {
     id: 'jargon-lottery',
     category: '過去の指摘',
     severity: 'warning',
     pattern: /くじ(?![らかきくけい])/u,
     good: '確率と回数をそのまま書く。例:「実行のたびに 1.5% の確率で失敗する」「回数を重ねればいずれ失敗する」。実際の抽選・抽選機能について書く場合は残してよい',
-  },
-  {
-    // 「焼き込む」「焼き付く」「焼き直す」は埋め込みの意味で定着しており指摘の対象外。
-    // 記録媒体への書き込みと調理は後読みで外す
-    id: 'jargon-burn',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern:
-      /(?<!(?:CD|DVD|BD|ROM|ディスク|イメージ|画像|写真|パン|肉|魚|芋) ?[をに] ?)焼(?:く|き(?![込付直上])|い[てた]|か(?![れ]))/u,
-    good: '何をどれだけ消費するかをそのまま書く。例:「240 秒を消費する」「上限までトークンを使い切る」。記録媒体への書き込み、調理、日焼けは残してよい',
-  },
-  {
-    id: 'jargon-authority',
-    category: '過去の指摘',
-    severity: 'warning',
-    pattern: /正本/u,
-    good: '値の出どころをそのまま書く。例:「この設定はここのファイルの値を使う」「食い違ったら settings.json を優先する」。法律文書の正本(謄本と対になるもの)は残してよい',
   },
   {
     id: 'jargon-contract',
@@ -228,10 +195,11 @@ export const wordRules = [
     good: '保証する内容をそのまま書く。例:「受け取った順に処理する」「失敗しても件数は変わらない」。人と交わす約束は残してよい',
   },
   {
+    // textlint は助詞「に」とサ変の「する」に挟まれた「配線」だけを検出するため、その形を除く
     id: 'jargon-wire',
     category: '過去の指摘',
     severity: 'warning',
-    pattern: /配線(?!工)/u,
+    pattern: /(?<!に ?)配線(?!工)|配線(?![工すしさせ])/u,
     good: 'どれをどこへ渡すかをそのまま書く。例:「ハンドラを router に登録する」「生成した client を引数で渡す」。電気やネットワークの実物の配線は残してよい',
   },
   {
@@ -429,10 +397,11 @@ export const wordRules = [
     good: '「引く」を使わず、選ぶ・表示する・取り出すのどれをするかをそのまま書く。例:「全レシピから1件だけ選ぶ」「ランダムに1件表示する」。くじや線や辞書を実際に引く意味は残してよい',
   },
   {
+    // textlint は送り仮名を省いた「落し穴」を検出しない
     id: 'jargon-pitfall',
     category: '過去の指摘',
     severity: 'warning',
-    pattern: /落とし穴|落し穴/u,
+    pattern: /落し穴/u,
     good: '何が起きるかをそのまま書く。例:「この順で書くと環境変数が読まれない」「引数を省くと既定値で上書きされる」。地面に掘る実際の落とし穴は残してよい',
   },
   {
@@ -457,13 +426,6 @@ export const wordRules = [
   // 本人の使用がある語(実測・切り分け・瞬間・断定・既定)は入れていない。
   // 出典 https://nyosegawa.com/posts/qiita-writing-before-after-ai/
   {
-    id: 'jargon-pass-through',
-    category: '失敗の比喩',
-    severity: 'warning',
-    pattern: /素通り/u,
-    good: '何が処理されないかをそのまま書く。例:「この分岐は検査せずに次へ渡す」「フィルタが適用されない」',
-  },
-  {
     id: 'jargon-magnitude',
     category: '判断の言い回し',
     severity: 'warning',
@@ -478,55 +440,13 @@ export const wordRules = [
     good: '何と何を混同するかを書く。例:「id と index を逆に渡す」',
   },
   {
-    id: 'jargon-standard-move',
-    category: '判断の言い回し',
-    severity: 'warning',
-    pattern: /定石/u,
-    good: 'なぜその方法を選ぶかを書く。例:「この件数なら index を張る」',
-  },
-  {
-    id: 'jargon-composition',
-    category: '場所や物のたとえ',
-    severity: 'warning',
-    pattern: /という構図/u,
-    good: '関係をそのまま書く。例:「A が B を呼び、失敗すると C が再試行する」',
-  },
-  {
-    id: 'jargon-tool',
-    category: '場所や物のたとえ',
-    severity: 'warning',
-    pattern: /(?:ための|という)道具/u,
-    good: '何ができるかをそのまま書く。例:「差分を出すコマンド」。実物の工具は残してよい',
-  },
-  {
-    // 建物の入口と分けるため、比喩でしか付かない助詞まで含めて見る
-    id: 'jargon-entrance',
-    category: '場所や物のたとえ',
-    severity: 'warning',
-    pattern: /入口(?:として|に立|になる)/u,
-    good: '最初に何をするかをそのまま書く。例:「最初に読むのはこのファイル」。建物の入口は残してよい',
-  },
-  {
-    // silently break / silently ignored の直訳
+    // silently fail / silently ignore の直訳。textlint は「静かに」の後の
+    // 壊れる・落ちる・止まる・消える と受身の「無視される」だけを検出する
     id: 'jargon-silently',
     category: '翻訳調の言い回し',
     severity: 'warning',
-    pattern: /静かに(?:壊れ|失敗|死ぬ|落ちる|止ま|消え|無視)/u,
+    pattern: /静かに(?:失敗|死ぬ|無視)(?!さ)/u,
     good: 'エラーが出ないことをそのまま書く。例:「例外を投げずに空配列を返す」「警告も出さずに設定を捨てる」',
-  },
-  {
-    id: 'jargon-accident',
-    category: '失敗の比喩',
-    severity: 'warning',
-    pattern: /(?<!交通|人身|自動車|追突|接触|労災)事故(?![死車現])/u,
-    good: '何が起きるかをそのまま書く。例:「本番のデータを上書きする」。実際の事故は残してよい',
-  },
-  {
-    id: 'jargon-collapse',
-    category: '失敗の比喩',
-    severity: 'warning',
-    pattern: /(?<!財政|経営|家庭|婚姻|債務)破綻/u,
-    good: '何が成り立たなくなるかを書く。例:「件数が合わなくなる」「型が合わずビルドが落ちる」。経営や財政の破綻は残してよい',
   },
   {
     id: 'jargon-tilt',
@@ -541,13 +461,6 @@ export const wordRules = [
     severity: 'warning',
     pattern: /(?<!(?:熱|水|空気|蒸気|圧|魚|鳥|虫|煙) ?[をが] ?)逃が[すしせそ]/u,
     good: '例外や負荷をどう扱うかをそのまま書く。例:「例外を握りつぶさず呼び出し元へ投げる」。熱や水を実際に逃がす意味は残してよい',
-  },
-  {
-    id: 'jargon-crush',
-    category: '作業の比喩',
-    severity: 'warning',
-    pattern: /(?<!(?:時間|暇|ひま|顔|面目|芽) ?[をが] ?)潰[すしせさそ]/u,
-    good: '何を直すかをそのまま書く。例:「未処理の不具合を 1 件ずつ直す」。時間や暇を潰す意味は残してよい',
   },
   {
     // 境界値分析は試験の用語、境界面は jargon-surface が見るため後読みで外す
@@ -597,38 +510,6 @@ export const documentRules = {
   },
 } as const satisfies Record<string, DocumentRule>;
 
-// キーは preset-ai-writing の rule id と一致させる。textlint 側のメッセージは
-// 「より自然な表現を検討してください」で終わり書き換え先を示さないため、good だけ
-// こちらで持つ。severity は語規則と違い全て warning から始める。構造の指摘は
-// 書式の好みと区別がつかず、severe にすると SKILL.md の編集が進まなくなる
-export const textlintRules = {
-  'no-ai-list-formatting': {
-    category: 'リストの書式',
-    severity: 'warning',
-    good: '絵文字を消して語で書く。例:「✅ 完了」→「完了」',
-  },
-  'no-ai-emphasis-patterns': {
-    category: '強調の書式',
-    severity: 'warning',
-    good: '見出しの ** を外す。強調は地の文の語にだけ使う',
-  },
-  'no-ai-hype-expressions': {
-    category: '誇張',
-    severity: 'warning',
-    good: '誇張語を消して事実だけ書く。程度を示すなら数値か比較対象を添える。例:「大幅に短縮」→「1.2 秒から 0.4 秒に短縮」',
-  },
-  'no-ai-colon-continuation': {
-    category: 'コロンの継続',
-    severity: 'warning',
-    good: 'コロンを消して文で言い切る。例:「実行します:」→「実行方法は次のとおりです。」。名詞で終わるコロン(「例:」「使用方法:」)は残してよい',
-  },
-  'ai-tech-writing-guideline': {
-    category: '冗長・曖昧',
-    severity: 'warning',
-    good: '冗長な言い回しを削り、能動態と具体的な数値で書く。例:「操作する必要があります」→「操作します」。「必要に応じて」「適切に」は削る',
-  },
-} as const satisfies Record<string, TextlintRule>;
-
 // 回数だけで判定すると長い文書ほど当たりやすい。密度が薄いうちは人間の修辞と
 // 区別がつかないため、地の文に対する比率も条件にする
 export const antithesisRatioThreshold = 0.02;
@@ -663,8 +544,7 @@ export const plainEndings = [
 
 export type WordRuleId = (typeof wordRules)[number]['id'];
 export type DocumentRuleId = keyof typeof documentRules;
-export type TextlintRuleId = keyof typeof textlintRules;
-export type RuleId = WordRuleId | DocumentRuleId | TextlintRuleId;
+export type RuleId = WordRuleId | DocumentRuleId;
 
 export interface Violation {
   ruleId: RuleId;
@@ -685,12 +565,8 @@ export function isDocumentRuleId(id: RuleId): id is DocumentRuleId {
   return id in documentRules;
 }
 
-export function isTextlintRuleId(id: RuleId): id is TextlintRuleId {
-  return id in textlintRules;
-}
-
 // ファイル全体を見て判定する規則。今回書いた範囲に関係なく当たり続けるため、
 // 呼ぶ側は同じ指摘の再送を抑える
 export function isFileScopedRuleId(id: RuleId): boolean {
-  return isDocumentRuleId(id) || isTextlintRuleId(id);
+  return isDocumentRuleId(id);
 }

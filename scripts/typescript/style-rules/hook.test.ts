@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 
-const SEVERE = '型定義は核心的である。';
+const SEVERE = '型定義は鍵となる。';
 const SESSION_ID = 'hook-test-session';
 const SCRIPT_DIR = dirname(import.meta.dir);
 

@@ -1,7 +1,6 @@
 import { checkDocument } from './document-check.ts';
 import type { Violation } from './rules.ts';
 import { containsJapanese, sanitizedText, toSentences } from './sanitize.ts';
-import { checkTextlint } from './textlint-check.ts';
 import { checkWords } from './word-check.ts';
 
 export interface StyleCheckInput {
@@ -25,12 +24,7 @@ export async function runStyleCheck({
     (violation) => scope === undefined || scope.includes(violation.matched),
   );
 
-  const [document, textlint] = await Promise.all([
-    checkDocument(sentences),
-    // textlint は markdown の構造を見るため、sanitize 前の source を渡す
-    checkTextlint(source, sentences),
-  ]);
-  return [...words, ...document, ...textlint];
+  return [...words, ...(await checkDocument(sentences))];
 }
 
 export function severeViolations(violations: Violation[]): Violation[] {

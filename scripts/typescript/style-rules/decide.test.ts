@@ -9,9 +9,9 @@ import {
   type WarningStore,
 } from './session-store.ts';
 
-const SEVERE = '型定義は核心的である。';
+const SEVERE = '型定義は鍵となる。';
 const ANOTHER_SEVERE = '多角的な検討を行う。';
-const POLITE_SEVERE = '型定義は核心的です。';
+const POLITE_SEVERE = '型定義は根本的な部分です。';
 const WARNING = 'これは非常に速い。';
 const CLEAN = 'この関数は設定ファイルを読み込む。';
 // 「ます」が 3 連続する。文体の混在と体言止めは同時に起こさない
@@ -101,7 +101,7 @@ describe('書き込み直後の検査', () => {
 
       expect(reason).toContain(filePath);
       expect(reason).toContain(`[error] ${SEVERE}`);
-      expect(reason).toContain('  核心的: ');
+      expect(reason).toContain('  鍵となる: ');
     });
 
     test('差し替えた断片に含まれる語だけを報告すること', async () => {
@@ -307,9 +307,9 @@ describe('ターン終了時の確認', () => {
   test('差し戻し文面に載りきらない数の指摘がある時、載らなかった文も示されること', async () => {
     const body = Array.from(
       { length: 10 },
-      (_, index) => `項目 ${index + 1} の設定は核心的である。`,
+      (_, index) => `項目 ${index + 1} の設定は鍵となる。`,
     ).join('\n\n');
-    const lastSentence = '項目 10 の設定は核心的である。';
+    const lastSentence = '項目 10 の設定は鍵となる。';
     const filePath = await writeMarkdown('a.md', body);
     expect(await write(filePath, body)).not.toContain(lastSentence);
 
