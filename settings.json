@@ -38,6 +38,7 @@
     ],
     "defaultMode": "auto"
   },
+  "model": "opus[1m]",
   "disableClaudeAiConnectors": true,
   "skillOverrides": {
     "dataviz": "off",
@@ -326,6 +327,5 @@
       "$defaults"
     ]
   },
-  "leftArrowOpensAgents": false,
-  "model": "opus"
+  "leftArrowOpensAgents": false
 }
