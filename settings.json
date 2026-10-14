@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "cleanupPeriodDays": 999,
+  "cleanupPeriodDays": 90,
   "syncClaudeAiSkills": false,
   "syncClaudeAiPlugins": false,
   "env": {
@@ -157,6 +157,15 @@
           {
             "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/notify-input-needed.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/tdd-skill-guard.ts"
           }
         ]
       },
