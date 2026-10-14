@@ -48,6 +48,17 @@ async function patchComment(id: string, doc: string = TEST_DOC): Promise<Respons
   );
 }
 
+async function editComment(id: string, body: unknown, doc: string = TEST_DOC): Promise<Response> {
+  return await app.request(
+    `/api/comments?doc=${encodeURIComponent(doc)}&id=${encodeURIComponent(id)}`,
+    {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  );
+}
+
 async function deleteComment(id: string, doc: string = TEST_DOC): Promise<Response> {
   return await app.request(
     `/api/comments?doc=${encodeURIComponent(doc)}&id=${encodeURIComponent(id)}`,
@@ -164,6 +175,43 @@ describe('コメント保存 API', () => {
       const storedAdded = stored.find((x) => x.id === added.id);
       expect(storedExisting?.resolved).toBe(true);
       expect(storedAdded).toEqual(added);
+    });
+  });
+
+  describe('コメントの編集', () => {
+    it('編集したとき、そのコメントの本文だけが書き換わり、引用位置とほかのコメントは変わらないこと', async () => {
+      const aRes = await postComment({ ...VALID_INPUT, comment: 'A' });
+      const a = (await aRes.json()) as Annotation;
+      const bRes = await postComment({ ...VALID_INPUT, comment: 'B' });
+      const b = (await bRes.json()) as Annotation;
+
+      const editRes = await editComment(a.id, { comment: 'A を直した' });
+
+      expect(editRes.status).toBe(200);
+      const stored = await storedAnnotations();
+      expect(stored).toEqual([{ ...a, comment: 'A を直した' }, b]);
+    });
+
+    it('本文が空のとき、保存内容が変わらないこと', async () => {
+      const createdRes = await postComment();
+      const created = (await createdRes.json()) as Annotation;
+
+      const editRes = await editComment(created.id, { comment: '' });
+
+      expect(editRes.status).toBe(400);
+      const stored = await storedAnnotations();
+      expect(stored).toEqual([created]);
+    });
+
+    it('存在しない id を指定したとき、保存内容が変わらないこと', async () => {
+      const createdRes = await postComment();
+      const created = (await createdRes.json()) as Annotation;
+
+      const editRes = await editComment('存在しない-id', { comment: '書き換え' });
+
+      expect(editRes.status).toBe(404);
+      const stored = await storedAnnotations();
+      expect(stored).toEqual([created]);
     });
   });
 

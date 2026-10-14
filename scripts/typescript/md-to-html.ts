@@ -104,11 +104,16 @@ async function embedLocalImages(html: string, baseDir: string): Promise<string> 
   return result + html.slice(cursor);
 }
 
+// 列の多い表や長い英単語を含む表が本文幅を超えたとき、ページ全体ではなく表だけを
+// 横スクロールさせるために包む。micromark は生の HTML をエスケープするため、
+// ここに現れる <table> は GFM の表だけ
 function renderMarkdown(body: string): string {
   return micromark(body, {
     extensions: [gfm()],
     htmlExtensions: [gfmHtml()],
-  });
+  })
+    .replaceAll('<table>', '<div class="table-scroll"><table>')
+    .replaceAll('</table>', '</table></div>');
 }
 
 async function saveSourcePath(port: number, outPath: string, sourcePath: string): Promise<boolean> {

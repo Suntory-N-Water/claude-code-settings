@@ -23,6 +23,10 @@ const AnnotationInputSchema = v.object({
   comment: v.pipe(v.string(), v.minLength(1), v.maxLength(10_000)),
 });
 
+const CommentEditSchema = v.object({
+  comment: AnnotationInputSchema.entries.comment,
+});
+
 const SourceInputSchema = v.object({
   sourcePath: v.pipe(v.string(), v.minLength(1), v.maxLength(4096)),
 });
@@ -92,6 +96,33 @@ app.patch('/api/comments', async (c) => {
     return c.json({ error: '指定されたコメントが存在しません' }, 404);
   }
   return c.json({ ok: true, comment: target.comment });
+});
+
+// PATCH は解決済みにする操作に使っているため、本文の書き換えは PUT で受ける
+app.put('/api/comments', async (c) => {
+  const commentsPath = commentsPathFromQuery(c.req.query('doc'));
+  if (commentsPath === undefined) {
+    return c.json({ error: 'doc パラメータが不正です' }, 400);
+  }
+  const id = c.req.query('id');
+  if (id === undefined) {
+    return c.json({ error: 'id パラメータがありません' }, 400);
+  }
+  const parsed = v.safeParse(CommentEditSchema, await c.req.json());
+  if (!parsed.success) {
+    return c.json({ error: 'コメントの形式が不正です' }, 400);
+  }
+  const target = await updateCommentsFile(commentsPath, (comments) => {
+    const found = comments.annotations.find((a) => a.id === id);
+    if (found !== undefined) {
+      found.comment = parsed.output.comment;
+    }
+    return found;
+  });
+  if (target === undefined) {
+    return c.json({ error: '指定されたコメントが存在しません' }, 404);
+  }
+  return c.json(target);
 });
 
 app.put('/api/source', async (c) => {

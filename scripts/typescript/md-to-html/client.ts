@@ -42,28 +42,76 @@ function setupToc(): boolean {
   if (!toc || !content) {
     return false;
   }
-  const headings = Array.from(content.querySelectorAll('h1, h2, h3')).filter(
+  const allHeadings = Array.from(content.querySelectorAll('h1, h2, h3')).filter(
     (heading): heading is HTMLElement => heading instanceof HTMLElement,
   );
+  // h1 が 1 つだけなら文書タイトルなので、目次の先頭に置いても移動先として役に立たない
+  const titleOnly = allHeadings.filter((heading) => heading.tagName === 'H1').length === 1;
+  const headings = titleOnly
+    ? allHeadings.filter((heading) => heading.tagName !== 'H1')
+    : allHeadings;
   if (headings.length < 2) {
     toc.hidden = true;
     return false;
   }
+  const topLevel = Math.min(...headings.map((heading) => Number(heading.tagName.slice(1))));
   const list = document.createElement('ul');
+  const links: HTMLAnchorElement[] = [];
   headings.forEach((heading, index) => {
     if (heading.id === '') {
       heading.id = `heading-${index}`;
     }
     const item = document.createElement('li');
-    item.className = `toc-level-${heading.tagName.toLowerCase()}`;
+    item.className = `toc-depth-${Number(heading.tagName.slice(1)) - topLevel}`;
     const link = document.createElement('a');
     link.href = `#${heading.id}`;
     link.textContent = heading.textContent ?? '';
     item.append(link);
     list.append(item);
+    links.push(link);
   });
   toc.append(list);
+  trackCurrentHeading(headings, links);
   return true;
+}
+
+// 見出しの scroll-margin-top より少し下を基準にし、目次のリンクで飛んだ直後に
+// 飛び先の見出しが現在位置として選ばれるようにする
+const CURRENT_HEADING_OFFSET = 32;
+
+function trackCurrentHeading(headings: HTMLElement[], links: HTMLAnchorElement[]): void {
+  let scheduled = false;
+  const update = (): void => {
+    scheduled = false;
+    // 末尾の短い節は見出しが基準位置まで上がらないため、最下部では画面内の最後の見出しを選ぶ
+    const atBottom =
+      window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+    const threshold = atBottom ? window.innerHeight : CURRENT_HEADING_OFFSET;
+    let current = -1;
+    headings.forEach((heading, index) => {
+      if (heading.getBoundingClientRect().top <= threshold) {
+        current = index;
+      }
+    });
+    links.forEach((link, index) => {
+      if (index === current) {
+        link.setAttribute('aria-current', 'location');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+  };
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (!scheduled) {
+        scheduled = true;
+        requestAnimationFrame(update);
+      }
+    },
+    { passive: true },
+  );
+  update();
 }
 
 interface PanelPrefs {
@@ -162,8 +210,13 @@ function setupDiffNav(): void {
   const diff = document.getElementById('diff');
   const nav = document.getElementById('diff-nav');
   const diffBtn = document.getElementById('view-diff-btn');
+  const source = document.getElementById('diff-source');
   if (!diff || !nav) {
     return;
+  }
+  if (source instanceof HTMLTemplateElement) {
+    diff.append(source.content);
+    source.remove();
   }
   const blocks: Element[] = [];
   for (const change of Array.from(diff.querySelectorAll('ins, del'))) {
@@ -379,6 +432,8 @@ function wrapTextSlice(node: Text, start: number, end: number, id: string): void
   mark.appendChild(target);
 }
 
+const STRUCTURAL_PARENTS = 'table, thead, tbody, tfoot, tr, ul, ol';
+
 function highlightRange(start: number, end: number, id: string): void {
   if (!content) {
     return;
@@ -394,6 +449,11 @@ function highlightRange(start: number, end: number, id: string): void {
     }
     if (nodeStart >= end) {
       break;
+    }
+    // セルや項目の間にある改行まで mark で包むと、tr 直下の mark を余分なセルとして
+    // 描画するなど構造が崩れる。ここの空白は表示されないため、包まなくても見た目は変わらない
+    if (node.parentElement?.matches(STRUCTURAL_PARENTS) === true) {
+      continue;
     }
     wrapTextSlice(
       node,
@@ -469,7 +529,7 @@ function renderCommentList(annotations: Annotation[], missingIds: Set<string>): 
       : formatDate(annotation.createdAt);
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
-    deleteBtn.className = 'comment-delete';
+    deleteBtn.className = 'comment-action comment-delete';
     deleteBtn.textContent = '削除';
     deleteBtn.addEventListener('click', (event) => {
       event.stopPropagation();
@@ -477,7 +537,27 @@ function renderCommentList(annotations: Annotation[], missingIds: Set<string>): 
         void deleteAnnotation(annotation.id);
       }
     });
-    meta.append(time, deleteBtn);
+    const actions = document.createElement('div');
+    actions.className = 'comment-actions';
+    // 本文中に見つからないコメントは開く位置となるハイライトがないため、削除だけを出す
+    if (!missingIds.has(annotation.id)) {
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'comment-action';
+      editBtn.textContent = '編集';
+      editBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        selectAnnotation(annotation.id);
+        const mark = document.querySelector(
+          `mark.annotation-mark[data-annotation-id="${annotation.id}"]`,
+        );
+        mark?.scrollIntoView({ behavior: 'instant', block: 'center' });
+        openEditPopover(annotation.id);
+      });
+      actions.append(editBtn);
+    }
+    actions.append(deleteBtn);
+    meta.append(time, actions);
 
     card.append(quote, body, meta);
     card.addEventListener('click', () => {
@@ -513,14 +593,29 @@ async function createAnnotation(selector: Selector, comment: string): Promise<vo
   }
 }
 
+async function updateAnnotation(id: string, comment: string): Promise<void> {
+  const res = await fetch(`${apiUrl()}&id=${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ comment }),
+  });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+}
+
+async function deleteAnnotationOrThrow(id: string): Promise<void> {
+  const res = await fetch(`${apiUrl()}&id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+}
+
 async function deleteAnnotation(id: string): Promise<void> {
   try {
-    const res = await fetch(`${apiUrl()}&id=${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
+    await deleteAnnotationOrThrow(id);
   } catch {
     note('コメントの削除に失敗しました');
     return;
@@ -541,6 +636,7 @@ async function reload(): Promise<void> {
     note('コメントを読み込めませんでした(保存サーバが起動していません)');
     return;
   }
+  annotationsById = new Map(annotations.map((annotation) => [annotation.id, annotation]));
   clearHighlights();
   const docText = contentText();
   const located: { annotation: Annotation; start: number }[] = [];
@@ -568,6 +664,7 @@ async function reload(): Promise<void> {
 
 let pendingSelector: Selector | undefined;
 let popover: HTMLElement | undefined;
+let annotationsById = new Map<string, Annotation>();
 
 const annotateButton = document.createElement('button');
 annotateButton.id = 'annotate-button';
@@ -603,24 +700,67 @@ function updateAnnotateButton(): void {
   annotateButton.style.left = `${window.scrollX + rect.left}px`;
 }
 
-function openPopover(): void {
-  if (!pendingSelector) {
-    return;
-  }
-  const selector = pendingSelector;
+interface PopoverOptions {
+  label: string;
+  initialText: string;
+  onSave: (comment: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
+}
+
+// 画面右端に近い位置で開くと、ポップオーバーが画面外にはみ出して操作できなくなる
+const POPOVER_MARGIN = 16;
+
+function showPopover(top: number, left: number, options: PopoverOptions): void {
   closePopover();
 
   const container = document.createElement('div');
   container.className = 'comment-popover';
-  container.style.top = annotateButton.style.top;
-  container.style.left = annotateButton.style.left;
+  container.setAttribute('role', 'dialog');
+  container.setAttribute('aria-label', options.label);
+  container.style.top = `${top}px`;
+  document.body.append(container);
+  const maxLeft = window.scrollX + window.innerWidth - container.offsetWidth - POPOVER_MARGIN;
+  container.style.left = `${Math.max(window.scrollX + POPOVER_MARGIN, Math.min(left, maxLeft))}px`;
 
   const textarea = document.createElement('textarea');
   textarea.placeholder = 'コメントを入力';
   textarea.rows = 4;
+  textarea.value = options.initialText;
 
   const actions = document.createElement('div');
   actions.className = 'comment-popover-actions';
+  const buttons: HTMLButtonElement[] = [];
+  const setBusy = (busy: boolean): void => {
+    for (const button of buttons) {
+      button.disabled = busy;
+    }
+  };
+  const run = (action: () => Promise<void>, failure: string): void => {
+    setBusy(true);
+    void action()
+      .then(() => {
+        closePopover();
+        return reload();
+      })
+      .catch(() => {
+        setBusy(false);
+        note(failure);
+      });
+  };
+
+  const onDelete = options.onDelete;
+  if (onDelete) {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'danger';
+    deleteBtn.textContent = '削除';
+    deleteBtn.addEventListener('click', () => {
+      if (window.confirm('このコメントを削除しますか?')) {
+        run(onDelete, 'コメントの削除に失敗しました');
+      }
+    });
+    buttons.push(deleteBtn);
+  }
   const cancelBtn = document.createElement('button');
   cancelBtn.type = 'button';
   cancelBtn.textContent = 'キャンセル';
@@ -635,25 +775,56 @@ function openPopover(): void {
       textarea.focus();
       return;
     }
-    saveBtn.disabled = true;
-    void createAnnotation(selector, comment)
-      .then(() => {
-        closePopover();
-        window.getSelection()?.removeAllRanges();
-        return reload();
-      })
-      .catch(() => {
-        saveBtn.disabled = false;
-        note('コメントの保存に失敗しました');
-      });
+    run(() => options.onSave(comment), 'コメントの保存に失敗しました');
   });
-  actions.append(cancelBtn, saveBtn);
+  buttons.push(cancelBtn, saveBtn);
+  actions.append(...buttons);
 
-  container.append(textarea, actions);
-  document.body.append(container);
+  container.prepend(textarea);
+  container.append(actions);
   popover = container;
   textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
   hideAnnotateButton();
+}
+
+function openPopover(): void {
+  if (!pendingSelector) {
+    return;
+  }
+  const selector = pendingSelector;
+  showPopover(
+    Number.parseFloat(annotateButton.style.top),
+    Number.parseFloat(annotateButton.style.left),
+    {
+      label: 'コメントを追加',
+      initialText: '',
+      onSave: async (comment) => {
+        await createAnnotation(selector, comment);
+        window.getSelection()?.removeAllRanges();
+      },
+    },
+  );
+}
+
+// コメント欄を閉じていても、本文を読む位置から離れずに編集・削除できるよう、
+// ハイライトの直下に開く
+function openEditPopover(id: string): void {
+  const annotation = annotationsById.get(id);
+  const marks = document.querySelectorAll(`mark.annotation-mark[data-annotation-id="${id}"]`);
+  const lastMark = marks[marks.length - 1];
+  if (!annotation || !lastMark) {
+    return;
+  }
+  // 複数行にまたがるハイライトは、最後の行の下に開く
+  const rects = lastMark.getClientRects();
+  const rect = rects[rects.length - 1] ?? lastMark.getBoundingClientRect();
+  showPopover(window.scrollY + rect.bottom + 8, window.scrollX + rect.left, {
+    label: 'コメントを編集',
+    initialText: annotation.comment,
+    onSave: (comment) => updateAnnotation(id, comment),
+    onDelete: () => deleteAnnotationOrThrow(id),
+  });
 }
 
 function setupSelectionUi(): void {
@@ -687,11 +858,20 @@ function setupSelectionUi(): void {
       if (!(mark instanceof HTMLElement) || !mark.dataset.annotationId) {
         return;
       }
+      // ハイライト内の文字をドラッグで選んだときは、新しいコメントを付ける操作として扱う
+      if (window.getSelection()?.isCollapsed === false) {
+        return;
+      }
       const id = mark.dataset.annotationId;
       selectAnnotation(id);
-      document
-        .querySelector(`.comment-card[data-annotation-id="${id}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // コメント欄が本文の下に回っている幅では、カードへスクロールすると本文から離れてしまう
+      const panel = document.getElementById('comment-panel');
+      if (panel && getComputedStyle(panel).position === 'sticky') {
+        document
+          .querySelector(`.comment-card[data-annotation-id="${id}"]`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      openEditPopover(id);
     });
   }
 }
