@@ -223,6 +223,14 @@
             "command": "bun run -i --silent ~/.claude/scripts/typescript/style-check-stop.ts"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/unfinished-work-guard.ts"
+          }
+        ]
       }
     ],
     "SubagentStart": [
