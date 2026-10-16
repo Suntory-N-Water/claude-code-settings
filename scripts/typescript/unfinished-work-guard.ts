@@ -1,18 +1,65 @@
 #!/usr/bin/env bun
 import { readFileSync } from 'node:fs';
 import { defineHook } from 'cc-hooks-ts';
+import type { Token } from 'kuromoji';
+import { loadTokenizer } from './style-rules/tokenizer.ts';
 
-// Claude Code は Stop のたびにこの hook の終了を待つため、LLM 判定は入れずに正規表現だけで判定する。
+// Claude Code は Stop のたびにこの hook の終了を待つため、LLM 判定は入れない。
 // 動詞を検証・実行系に限るのは、「ロジックは変更していません」「X は含めていません」のような
-// 作業範囲の説明まで拾うと、やり残しのないターンまで差し戻すことになるため
-const ACTION =
-  '(?:調べ|確かめ|確認し|確認でき|検証し|試し|実行し|動かし|走らせ|テストし|計測し|測っ|比較し|' +
-  'コミットし|push ?し|プッシュし|push ?でき|ステージし|' +
-  '記録し|保存し|反映し|適用し|修正し|対応し|実装し|更新し|作成し|' +
-  '着手し|手を付け|手をつけ|調査し|ビルドし|デプロイし|インストールし|導入し|再起動し|作っ|直し|' +
-  '整形し|実施し|計算し|集計し|再生成し)';
+// 作業範囲の説明まで拾うと、やり残しのないターンまで差し戻すことになるため。
+// 活用形の文字列ではなく形態素解析の基本形で比べるのは、「確認はしていません」のように
+// 名詞と「する」の間に助詞が入った形を、活用形の列挙では拾えないため
+const ACTION_VERBS = new Set([
+  '調べる',
+  '確かめる',
+  '試す',
+  '動かす',
+  '走らせる',
+  '測る',
+  '作る',
+  '直す',
+  '手を付ける',
+  '手をつける',
+]);
+// 「動作確認」「テスト実行」のような複合語も拾うため、「する」「できる」の前の名詞は末尾が一致すれば作業とみなす
+const ACTION_NOUNS = [
+  '確認',
+  '検証',
+  '実行',
+  'テスト',
+  '計測',
+  '比較',
+  'コミット',
+  'push',
+  'プッシュ',
+  'ステージ',
+  '記録',
+  '保存',
+  '反映',
+  '適用',
+  '修正',
+  '対応',
+  '実装',
+  '更新',
+  '作成',
+  '着手',
+  '調査',
+  'ビルド',
+  'デプロイ',
+  'インストール',
+  '導入',
+  '再起動',
+  '整形',
+  '実施',
+  '計算',
+  '集計',
+  '再生成',
+];
+const LIGHT_VERBS = new Set(['する', 'できる']);
+const PARTICLES_BEFORE_LIGHT_VERB = new Set(['は', 'も', 'を']);
+const NEGATED_PROGRESSIVE = /て(?:い|お)?(?:ません|ない)/u;
+const NEGATED_PROGRESSIVE_HEAD = new RegExp(`^${NEGATED_PROGRESSIVE.source}`, 'u');
 const UNDONE = [
-  new RegExp(`${ACTION}て(?:い|お)?(?:ません(?:でした)?|ない(?:です)?)`, 'u'),
   /(?:まだ|これから)(?:\S{0,20})(?:行っ|やっ|進め)て(?:い|お)?ません/u,
   /未(?:実施|実行|確認|検証|着手|対応|調査|コミット|テスト|反映|適用|検討)(?:です|のまま|で)/u,
 ];
@@ -48,10 +95,56 @@ function sentences(text: string): string[] {
     .filter((s) => s.length > 0);
 }
 
-export function findUndone(text: string, request: string): string[] {
+function nounBefore(preceding: Token[]): string {
+  const reversed = [...preceding].reverse();
+  const nounStart = reversed.findIndex(
+    (t) => !PARTICLES_BEFORE_LIGHT_VERB.has(t.surface_form) && t.pos_detail_1 !== '空白',
+  );
+  if (nounStart === -1) {
+    return '';
+  }
+  const rest = reversed.slice(nounStart);
+  const nounEnd = rest.findIndex((t) => t.pos !== '名詞' && t.pos !== '接頭詞');
+  return (nounEnd === -1 ? rest : rest.slice(0, nounEnd))
+    .reverse()
+    .map((t) => t.surface_form)
+    .join('')
+    .toLowerCase();
+}
+
+function isAction(verb: Token, preceding: Token[]): boolean {
+  if (LIGHT_VERBS.has(verb.basic_form)) {
+    const noun = nounBefore(preceding);
+    return ACTION_NOUNS.some((action) => noun.endsWith(action));
+  }
+  const object = preceding
+    .slice(-2)
+    .map((t) => t.surface_form)
+    .join('');
+  return ACTION_VERBS.has(verb.basic_form) || ACTION_VERBS.has(`${object}${verb.basic_form}`);
+}
+
+function negatesAction(tokens: Token[]): boolean {
+  return tokens.some((token, i) => {
+    if (token.pos !== '動詞' || token.pos_detail_1 !== '自立') {
+      return false;
+    }
+    const rest = tokens
+      .slice(i + 1)
+      .map((t) => t.surface_form)
+      .join('');
+    return NEGATED_PROGRESSIVE_HEAD.test(rest) && isAction(token, tokens.slice(0, i));
+  });
+}
+
+export async function findUndone(text: string, request: string): Promise<string[]> {
   const vcsRequested = VCS_REQUEST.test(request);
   const all = sentences(text);
   const tail = new Set(all.slice(-ANNOUNCE_WINDOW));
+  // 辞書の読み込みに約 110ms かかるため、「〜ていない」を含む文がないターンでは読み込まない
+  const tokenizer = all.some((s) => NEGATED_PROGRESSIVE.test(s))
+    ? await loadTokenizer()
+    : undefined;
   const hits = all.filter((s) => {
     if (tail.has(s) && ANNOUNCE.test(s)) {
       return true;
@@ -59,7 +152,10 @@ export function findUndone(text: string, request: string): string[] {
     if (HANDBACK.some((p) => p.test(s))) {
       return true;
     }
-    if (!UNDONE.some((p) => p.test(s))) {
+    const undone =
+      UNDONE.some((p) => p.test(s)) ||
+      (tokenizer !== undefined && negatesAction(tokenizer.tokenize(s)));
+    if (!undone) {
       return false;
     }
     return vcsRequested || !VCS_ACTION.test(s);
@@ -121,7 +217,7 @@ const hook = defineHook({
     Stop: true,
   },
 
-  run: (context) => {
+  run: async (context) => {
     // 2 回目も差し戻すと、正当な理由を書いた報告まで無限に差し戻すことになるため、1 ターンに一度だけにする
     if (context.input.stop_hook_active) {
       return context.success();
@@ -136,7 +232,7 @@ const hook = defineHook({
     try {
       // Claude Code は最終回答を Stop hook の終了後に transcript へ書き込むため、本文は last_assistant_message から読む
       const text = context.input.last_assistant_message ?? '';
-      const quotes = findUndone(text, userRequests(context.input.transcript_path));
+      const quotes = await findUndone(text, userRequests(context.input.transcript_path));
       if (quotes.length === 0) {
         return context.success();
       }

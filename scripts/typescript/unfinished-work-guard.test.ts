@@ -50,9 +50,24 @@ describe('差し戻す文', () => {
     });
   });
 
+  test.each([
+    '確認はしていません。',
+    '確認もしていません。',
+  ])('名詞と「している」の間に助詞が入った不実施の報告(%s)のとき、差し戻すこと', async (sentence) => {
+    const result = await runHook({
+      lastAssistantMessage: `設定を修正しました。\n${sentence}`,
+    });
+
+    expect(result).toMatchObject({
+      decision: 'block',
+      reason: expect.stringContaining(`- ${sentence}`),
+    });
+  });
+
   test('次の作業を宣言して終えたとき、差し戻すこと', async () => {
     const result = await runHook({
-      lastAssistantMessage: 'レビューの指摘を直しました。\n続けて、変更を機能ごとにコミットします。',
+      lastAssistantMessage:
+        'レビューの指摘を直しました。\n続けて、変更を機能ごとにコミットします。',
     });
 
     expect(result).toMatchObject({
@@ -151,6 +166,20 @@ describe('commit の報告', () => {
     expect(result).toMatchObject({
       decision: 'block',
       reason: expect.stringContaining('- この変更はまだコミットしていません。'),
+    });
+  });
+
+  test('依頼文でコミットを頼んでいて、コミットはしていないと報告したとき、差し戻すこと', async () => {
+    const transcriptPath = await withTranscript('設定ファイルの typo を直してコミットして');
+
+    const result = await runHook({
+      lastAssistantMessage: '設定を修正しました。\nコミットはしていません。',
+      transcriptPath,
+    });
+
+    expect(result).toMatchObject({
+      decision: 'block',
+      reason: expect.stringContaining('- コミットはしていません。'),
     });
   });
 });

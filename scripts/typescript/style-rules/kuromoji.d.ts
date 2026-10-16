@@ -3,6 +3,7 @@ declare module 'kuromoji' {
     surface_form: string;
     pos: string;
     pos_detail_1: string;
+    basic_form: string;
   }
 
   export interface Tokenizer {
