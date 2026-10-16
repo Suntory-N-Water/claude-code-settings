@@ -2,8 +2,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { defineHook } from 'cc-hooks-ts';
 
-const SKILL_NAME = 'general-dev-skills:test-driven-design';
-const SLASH_COMMAND_TAG = `<command-name>/${SKILL_NAME}</command-name>`;
+const SKILL_NAME = 'test-driven-design';
+// 個人環境と社内環境で同じスキルを別名のプラグイン経由で入れているため、プラグイン名は問わない
+const SKILL_PATTERN = new RegExp(`^(?:[\\w.-]+:)?${SKILL_NAME}$`);
+const SLASH_COMMAND_PATTERN = new RegExp(
+  `<command-name>/(?:[\\w.-]+:)?${SKILL_NAME}</command-name>`,
+);
 const TEST_FILE_PATTERN = /\.(test|spec)\.[cm]?[jt]sx?$/;
 
 type ContentBlock = { type?: string; text?: string; name?: string; input?: { skill?: string } };
@@ -34,7 +38,7 @@ function hasInvokedSkill(transcriptPath: string): boolean {
     }
     if (
       line.type === 'user' &&
-      userTexts(line.message?.content).some((text) => text.includes(SLASH_COMMAND_TAG))
+      userTexts(line.message?.content).some((text) => SLASH_COMMAND_PATTERN.test(text))
     ) {
       return true;
     }
@@ -43,7 +47,9 @@ function hasInvokedSkill(transcriptPath: string): boolean {
       Array.isArray(line.message?.content) &&
       line.message.content.some(
         (block) =>
-          block.type === 'tool_use' && block.name === 'Skill' && block.input?.skill === SKILL_NAME,
+          block.type === 'tool_use' &&
+          block.name === 'Skill' &&
+          SKILL_PATTERN.test(block.input?.skill ?? ''),
       )
     ) {
       return true;
@@ -84,7 +90,12 @@ const hook = defineHook({
         hookSpecificOutput: {
           hookEventName: 'PreToolUse',
           permissionDecision: 'deny',
-          permissionDecisionReason: `Invoke the ${SKILL_NAME} skill with the Skill tool before editing test files, then retry this edit.`,
+          permissionDecisionReason: [
+            'テスト設計の手順を踏まずにテストファイルを編集することはできません。',
+            `インストール済みの ${SKILL_NAME} スキル(<plugin>:${SKILL_NAME} という名前)を Skill ツールで起動し、スキルのワークフローに従ってください。`,
+            'テストケースごとに検出する不具合を添えた一覧をユーザーに示して承認を得て、追加したテストが失敗することを確かめてから完了を報告します。',
+            'ユーザーがテストケースを承認するまで、この編集を再試行しないでください。',
+          ].join(''),
         },
       },
     });

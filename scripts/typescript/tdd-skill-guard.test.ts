@@ -73,7 +73,7 @@ describe('スキルの起動記録がないとき', () => {
     expect(JSON.parse(stdout)).toMatchObject({
       hookSpecificOutput: {
         permissionDecision: 'deny',
-        permissionDecisionReason: expect.stringContaining('general-dev-skills:test-driven-design'),
+        permissionDecisionReason: expect.stringContaining('test-driven-design'),
       },
     });
   });
@@ -100,6 +100,17 @@ describe('スキルの起動記録がないとき', () => {
     expect(exitCode).toBe(0);
     expect(stdout).toContain('deny');
   });
+
+  test('スキル名の末尾に別の文字が続くスキル(hoge:test-driven-design-lite)だけを起動済みのとき、deny すること', async () => {
+    await writeTranscript(join(dir, 'session.jsonl'), [
+      userText('テストを直して'),
+      assistantToolUse('Skill', { skill: 'hoge:test-driven-design-lite' }),
+    ]);
+
+    const { stdout } = await runHook({ filePath: '/repo/src/foo.test.ts' });
+
+    expect(stdout).toContain('deny');
+  });
 });
 
 describe('スキルの起動記録があるとき', () => {
@@ -120,6 +131,29 @@ describe('スキルの起動記録があるとき', () => {
     await writeTranscript(join(dir, 'session.jsonl'), [
       userText('テストを直して'),
       assistantToolUse('Skill', { skill: 'general-dev-skills:test-driven-design' }),
+    ]);
+
+    const { stdout } = await runHook({ filePath: '/repo/src/foo.test.ts' });
+
+    expect(stdout).not.toContain('deny');
+  });
+
+  test('Claude が Skill ツールで別プラグインのスキル(hoge:test-driven-design)を起動済みのとき、deny しないこと', async () => {
+    await writeTranscript(join(dir, 'session.jsonl'), [
+      userText('テストを直して'),
+      assistantToolUse('Skill', { skill: 'hoge:test-driven-design' }),
+    ]);
+
+    const { stdout } = await runHook({ filePath: '/repo/src/foo.test.ts' });
+
+    expect(stdout).not.toContain('deny');
+  });
+
+  test('ユーザーがスラッシュコマンドで別プラグインのスキル(/hoge:test-driven-design)を起動済みのとき、deny しないこと', async () => {
+    await writeTranscript(join(dir, 'session.jsonl'), [
+      userText(
+        '<command-message>hoge:test-driven-design</command-message>\n<command-name>/hoge:test-driven-design</command-name>',
+      ),
     ]);
 
     const { stdout } = await runHook({ filePath: '/repo/src/foo.test.ts' });
