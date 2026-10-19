@@ -347,5 +347,6 @@
       "$defaults"
     ]
   },
-  "leftArrowOpensAgents": false
+  "leftArrowOpensAgents": false,
+  "idleCompaction": false
 }
