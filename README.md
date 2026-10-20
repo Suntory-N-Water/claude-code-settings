@@ -29,3 +29,5 @@ herdr server reload-config
 - フックのパスを `/Users/...` から始まる絶対パスにする（WSL ではこのパスにファイルが無い）
 
 herdr の更新でこのコマンドを実行し直したときは、`git diff settings.json` で上の 2 点を確かめて元に戻す。
+
+`scripts/typescript/herdr-pane-status.ts` は、Claude Code に送った指示の 1 行目を、herdr のサイドバーのエージェント一覧に出す。作業中か終わったかは、herdr が同じ行に出す `working` / `idle` で見分ける。herdr の外で起動した Claude Code では、このフックは何もしない。
