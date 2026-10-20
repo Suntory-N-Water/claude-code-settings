@@ -1,0 +1,24 @@
+onboarding = false
+
+[keys]
+# ctrl+b は zsh と Claude Code の入力欄で 1 文字戻る操作に使われているため避ける
+prefix = "ctrl+q"
+previous_agent = "prefix+["
+next_agent = "prefix+]"
+
+[ui]
+# 既定の 26 桁では、Claude Code に送った指示（herdr-pane-status.ts が送る）がエージェント一覧で数文字に切れる
+sidebar_width = 36
+# WSL の既定（自前描画のカーソル）では日本語 IME の変換候補の窓がカーソル位置に出ない。macOS の auto はもともと native
+host_cursor = "native"
+
+[ui.toast]
+# system は macOS と WSL で通知の経路が違うため、どちらでも同じに動く herdr 内のトーストにする
+delivery = "herdr"
+
+[experimental]
+# Claude Code は自前でカーソルを描いて端末のカーソルを隠すため、macOS の IME の変換候補の窓が入力位置に追従しない
+reveal_hidden_cursor_for_cjk_ime = true
+cjk_ime_agents = ["claude"]
+# macOS 以外では何もしない
+switch_ascii_input_source_in_prefix = true
