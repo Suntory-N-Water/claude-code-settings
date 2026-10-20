@@ -76,6 +76,16 @@
             "command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh ~/.claude/hooks/herdr-agent-state.sh session",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -92,6 +102,11 @@
           {
             "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/negation-guard.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/herdr-pane-status.ts",
+            "async": true
           }
         ]
       }
