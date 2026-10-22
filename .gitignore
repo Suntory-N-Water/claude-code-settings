@@ -97,5 +97,6 @@ feedback/
 
 cache-ttl/
 multi-command-check-log/
-policy-limits.json.stamp.json
+policy-limits.json*
+remote-settings.json*
 remote-settings.json.synced-at
