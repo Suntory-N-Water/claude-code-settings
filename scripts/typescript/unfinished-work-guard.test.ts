@@ -141,14 +141,91 @@ describe('差し戻しを見送る状況', () => {
 describe('commit の報告', () => {
   const REPORT = '設定を修正しました。\nこの変更はまだコミットしていません。';
 
-  async function withTranscript(prompt: string): Promise<string> {
+  async function withTranscript(
+    prompt: string,
+    extraEntries: Record<string, unknown>[] = [],
+  ): Promise<string> {
     const path = join(tmpdir(), `unfinished-work-guard-${crypto.randomUUID()}.jsonl`);
-    await Bun.write(
-      path,
-      `${JSON.stringify({ type: 'user', message: { role: 'user', content: prompt } })}\n`,
-    );
+    const entries = [{ type: 'user', message: { role: 'user', content: prompt } }, ...extraEntries];
+    await Bun.write(path, entries.map((e) => `${JSON.stringify(e)}\n`).join(''));
     return path;
   }
+
+  test.each([
+    'previous の結果を見て直して',
+    'Gemini Enterprise の資料を読んで',
+    'docs/progress.md に記録して',
+  ])('依頼文の単語の一部にだけ PR が含まれるとき(%s)、コミットしていないという報告を差し戻さないこと', async (prompt) => {
+    const transcriptPath = await withTranscript(prompt);
+
+    const result = await runHook({ lastAssistantMessage: REPORT, transcriptPath });
+
+    expect(result).toEqual({});
+  });
+
+  test('会話の圧縮後の要約にだけコミットの話があるとき、コミットしていないという報告を差し戻さないこと', async () => {
+    const transcriptPath = await withTranscript('設定ファイルの typo を直して', [
+      {
+        type: 'user',
+        isCompactSummary: true,
+        message: { role: 'user', content: '前の会話の要約: 変更を commit して push した。' },
+      },
+    ]);
+
+    const result = await runHook({ lastAssistantMessage: REPORT, transcriptPath });
+
+    expect(result).toEqual({});
+  });
+
+  test('依頼文でコミットだけを頼んでいるとき、push していないという報告を差し戻さないこと', async () => {
+    const transcriptPath = await withTranscript('設定ファイルの typo を直してコミットして');
+
+    const result = await runHook({
+      lastAssistantMessage: '設定を修正してコミットしました。\npush はしていません。',
+      transcriptPath,
+    });
+
+    expect(result).toEqual({});
+  });
+
+  test('依頼文で push は不要と書いているとき、push していないという報告を差し戻さないこと', async () => {
+    const transcriptPath = await withTranscript(
+      '設定ファイルの typo を直してコミットして。push は不要',
+    );
+
+    const result = await runHook({
+      lastAssistantMessage: '設定を修正してコミットしました。\npush はしていません。',
+      transcriptPath,
+    });
+
+    expect(result).toEqual({});
+  });
+
+  test('依頼文で PR の作成を頼んでいるとき、push していないという報告を差し戻すこと', async () => {
+    const transcriptPath = await withTranscript('設定ファイルの typo を直して PR を作って');
+
+    const result = await runHook({
+      lastAssistantMessage: '設定を修正してコミットしました。\npush はしていません。',
+      transcriptPath,
+    });
+
+    expect(result).toMatchObject({
+      decision: 'block',
+      reason: expect.stringContaining('- push はしていません。'),
+    });
+  });
+
+  test('依頼文でコミットを頼んでいて、コミットしていない変更は残っていないと報告したとき、差し戻さないこと', async () => {
+    const transcriptPath = await withTranscript('設定ファイルの typo を直してコミットして');
+
+    const result = await runHook({
+      lastAssistantMessage:
+        '設定を修正してコミットしました。\nコミットしていない変更は残っていません。',
+      transcriptPath,
+    });
+
+    expect(result).toEqual({});
+  });
 
   test('依頼文にコミットの話がないとき、コミットしていないという報告を差し戻さないこと', async () => {
     const transcriptPath = await withTranscript('設定ファイルの typo を直して');

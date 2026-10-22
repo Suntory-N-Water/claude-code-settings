@@ -76,8 +76,17 @@ const ANNOUNCE_WINDOW = 2;
 const FINISHED_TASK_STATUS = new Set(['completed', 'failed', 'killed', 'stopped', 'cancelled']);
 // Claude Code のシステムプロンプトは、頼まれていない commit/push をしないよう指示している。
 // 依頼文に出てこないのに差し戻すと、正しく報告した Claude に毎回やり直しをさせることになる
+// PR は単語の境界で区切る。区切らないと previous・progress・Enterprise に一致し、依頼のないコミットの報告まで差し戻していた
 const VCS_ACTION = /コミット|commit|push|プッシュ|ステージ|stage/iu;
-const VCS_REQUEST = /コミット|commit|push|プッシュ|PR|プルリク/iu;
+const PUSH_ACTION = /push|プッシュ/iu;
+const COMMIT_REQUEST = /コミット|commit|push|プッシュ|\bPR\b|プルリク/giu;
+const PUSH_REQUEST = /push|プッシュ|\bPR\b|プルリク/giu;
+// 「push は不要」「コミットしない」「push は私が自分で行う」は、操作を頼まない指示
+const REFUSAL_AFTER =
+  /^\s*(?:(?:は|も)?\s*(?:不要|しない|しなくて|禁止|やめ)|(?:は|も)\s*(?:私が|自分で))/u;
+// 「コミットしていない変更は残っていません」は、すべて終えたという報告
+const DOUBLE_NEGATIVE =
+  /て(?:い|お)?ない\S{0,15}(?:は|も)(?:残って(?:い|お)?ません|ありません|ない)/u;
 const MAX_QUOTES = 5;
 
 function sentences(text: string): string[] {
@@ -137,8 +146,18 @@ function negatesAction(tokens: Token[]): boolean {
   });
 }
 
+function requests(pattern: RegExp, request: string): boolean {
+  return [...request.matchAll(pattern)].some(
+    (m) => !REFUSAL_AFTER.test(request.slice(m.index + m[0].length)),
+  );
+}
+
 export async function findUndone(text: string, request: string): Promise<string[]> {
-  const vcsRequested = VCS_REQUEST.test(request);
+  const commitRequested = requests(COMMIT_REQUEST, request);
+  const pushRequested = requests(PUSH_REQUEST, request);
+  // コミットだけを頼まれたときの push は依頼の範囲外なので、操作ごとに依頼の有無を見る
+  const vcsInScope = (s: string) =>
+    !VCS_ACTION.test(s) || (PUSH_ACTION.test(s) ? pushRequested : commitRequested);
   const all = sentences(text);
   const tail = new Set(all.slice(-ANNOUNCE_WINDOW));
   // 辞書の読み込みに約 110ms かかるため、「〜ていない」を含む文がないターンでは読み込まない
@@ -152,13 +171,13 @@ export async function findUndone(text: string, request: string): Promise<string[
     if (HANDBACK.some((p) => p.test(s))) {
       return true;
     }
+    if (DOUBLE_NEGATIVE.test(s)) {
+      return false;
+    }
     const undone =
       UNDONE.some((p) => p.test(s)) ||
       (tokenizer !== undefined && negatesAction(tokenizer.tokenize(s)));
-    if (!undone) {
-      return false;
-    }
-    return vcsRequested || !VCS_ACTION.test(s);
+    return undone && vcsInScope(s);
   });
   return [...new Set(hits)].slice(0, MAX_QUOTES);
 }
@@ -188,7 +207,8 @@ export function userRequests(transcriptPath: string): string {
     }
     try {
       const entry = JSON.parse(line);
-      if (entry.type !== 'user' || entry.isMeta || entry.isSidechain) {
+      // 圧縮後の要約は Claude Code が書いた定型文で、依頼文ではない。圧縮前の依頼文は同じ transcript に残っている
+      if (entry.type !== 'user' || entry.isMeta || entry.isSidechain || entry.isCompactSummary) {
         continue;
       }
       const text = promptText(entry.message?.content);
@@ -206,8 +226,8 @@ function formatReason(quotes: string[]): string {
     ...quotes.map((q) => `- ${q.slice(0, 120)}`),
     '上の箇所それぞれについて、次の 1 か 2 を行ってください。',
     '1. 依頼の範囲内で、このセッションのツールで実行できる作業なら、いま実行し、結果だけを報告する。',
-    '2. 依頼の範囲外の作業、権限や環境の制約で実行できない作業、ユーザーの判断が必要な作業なら、' +
-      'その理由と、誰が何をすれば完了するかを 1 文で書く。',
+    // 範囲外の作業に理由を書かせると、「依頼がないのでコミットしていません」のような文が 1 段落増えるだけだった
+    '2. それ以外(依頼の範囲外、権限や環境の制約で実行できない、ユーザーの判断が必要)なら、何も書き足さずにターンを終える。',
     'すでにユーザーに届いた本文は再掲しないこと。',
   ].join('\n');
 }
