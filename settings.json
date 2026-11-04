@@ -24,7 +24,6 @@
     "DISABLE_DOCTOR_COMMAND": "1",
     "DISABLE_UPGRADE_COMMAND": "1",
     "DISABLE_EXTRA_USAGE_COMMAND": "1",
-    "DISABLE_INSTALL_GITHUB_APP_COMMAND": "1",
     "CLAUDE_CODE_THRIFTY_SONIC": "false"
   },
   "attribution": {
@@ -38,7 +37,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus",
+  "model": "sonnet",
   "disableClaudeAiConnectors": true,
   "skillOverrides": {
     "dataviz": "off",
@@ -154,6 +153,15 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "mcp__.*__wrap_up",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/japanese-guard.ts"
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -238,14 +246,6 @@
             "command": "bun run -i --silent ~/.claude/scripts/typescript/style-check-stop.ts"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/unfinished-work-guard.ts"
-          }
-        ]
       }
     ],
     "SubagentStart": [
@@ -281,7 +281,6 @@
       }
     ]
   },
-  "disableWorkflows": true,
   "workflowKeywordTriggerEnabled": false,
   "statusLine": {
     "type": "command",
@@ -326,7 +325,7 @@
       "effortLevel": "medium"
     },
     "claude-sonnet-5-5": {
-      "effortLevel": "medium"
+      "effortLevel": "high"
     },
     "claude-haiku-5-5": {
       "autoCompactWindow": 100000
@@ -351,6 +350,7 @@
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
   "autoCompactEnabled": true,
+  "idleCompaction": false,
   "switchModelsOnFlag": false,
   "showTurnDuration": false,
   "remoteControlAtStartup": false,
@@ -362,6 +362,5 @@
       "$defaults"
     ]
   },
-  "leftArrowOpensAgents": false,
-  "idleCompaction": false
+  "leftArrowOpensAgents": false
 }
