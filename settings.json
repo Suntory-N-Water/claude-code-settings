@@ -37,7 +37,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "sonnet",
+  "model": "opus",
   "disableClaudeAiConnectors": true,
   "skillOverrides": {
     "dataviz": "off",
