@@ -322,7 +322,8 @@
       "effortLevel": "medium"
     },
     "claude-opus-5-5": {
-      "effortLevel": "medium"
+      "effortLevel": "medium",
+      "autoCompactWindow": 300000
     },
     "claude-sonnet-5-5": {
       "effortLevel": "high"
