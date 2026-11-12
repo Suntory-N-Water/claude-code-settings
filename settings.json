@@ -19,6 +19,7 @@
     "CLAUDE_CODE_DISABLE_ADVISOR_TOOL": "1",
     "CLAUDE_CODE_GLOB_NO_IGNORE": "false",
     "CLAUDE_CODE_WEBFETCH_CACHE_TTL_MS": "3600000",
+    "CLAUDE_CODE_WEB_FETCH_AGENT": "0",
     "CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH": "1024",
     "DISABLE_BUG_COMMAND": "1",
     "DISABLE_DOCTOR_COMMAND": "1",
@@ -59,15 +60,6 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/session-start-reminder.ts"
-          }
-        ]
-      },
-      {
         "matcher": "clear|compact",
         "hooks": [
           {
@@ -100,10 +92,6 @@
           },
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/negation-guard.ts"
-          },
-          {
-            "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/herdr-pane-status.ts",
             "async": true
           }
@@ -116,19 +104,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/create-plan-link.ts"
-          },
-          {
-            "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/md-to-html.ts"
           },
           {
             "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-post-tool-use.ts"
-          },
-          {
-            "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/style-check.ts"
           }
         ]
       },
@@ -138,15 +118,6 @@
           {
             "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/md-to-html.ts"
-          }
-        ]
-      },
-      {
-        "matcher": "EnterPlanMode",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/plan-mode-style.ts"
           }
         ]
       }
@@ -243,7 +214,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/style-check-stop.ts"
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-edits-stop.ts"
           }
         ]
       }
@@ -266,16 +237,6 @@
           {
             "type": "command",
             "command": "bun run -i --silent ~/.claude/scripts/typescript/subagent-archive.ts"
-          }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/tool-failure-log.ts"
           }
         ]
       }
