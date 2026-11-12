@@ -152,6 +152,27 @@ function firstLine(text: string): string | undefined {
   return text.split('\n').at(0)?.trim();
 }
 
+// サブエージェントは最終報告を SubagentHandback ツールの message で渡す。
+// このとき last_assistant_message には、ツール呼び出しの前に書いた「Now searches.」のような途中の 1 文しか入らない
+function extractHandback(entries: SDKMessage[]): string | undefined {
+  for (let index = entries.length - 1; index >= 0; index--) {
+    const entry = entries[index];
+    if (entry?.type !== 'assistant') {
+      continue;
+    }
+    for (const block of entry.message.content) {
+      if (block.type !== 'tool_use' || block.name !== 'SubagentHandback') {
+        continue;
+      }
+      const message = Reflect.get(block.input ?? {}, 'message');
+      if (typeof message === 'string' && message.trim()) {
+        return message;
+      }
+    }
+  }
+  return undefined;
+}
+
 function extractLastAssistantText(entries: SDKMessage[]): string | undefined {
   for (let index = entries.length - 1; index >= 0; index--) {
     const entry = entries[index];
@@ -195,7 +216,8 @@ const hook = defineHook({
 
       const entries = readTranscript(agent_transcript_path);
 
-      const response = last_assistant_message ?? extractLastAssistantText(entries);
+      const response =
+        extractHandback(entries) ?? last_assistant_message ?? extractLastAssistantText(entries);
       if (!response) {
         return context.success();
       }
