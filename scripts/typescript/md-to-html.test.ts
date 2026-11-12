@@ -4,8 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { micromark } from 'micromark';
 import { gfm, gfmHtml } from 'micromark-extension-gfm';
-import { bashTargets, brokenByEdit, renderBodyDiff } from './md-to-html.ts';
+import { brokenByEdit, pageTitle, renderBodyDiff } from './md-to-html/convert.ts';
 import type { Annotation } from './md-to-html/shared.ts';
+import { bashTargets } from './md-to-html.ts';
 
 function toHtml(body: string): string {
   return micromark(body, {
@@ -191,5 +192,31 @@ describe('Bash コマンドから変換対象を選ぶ', () => {
     const result = await bashTargets(command, workDir);
 
     expect(result).toEqual([]);
+  });
+});
+
+describe('pageTitle', () => {
+  it('front matter のタイトルも見出しもない短い Markdown のとき、ファイル名をタイトルにして変換の対象とすること', () => {
+    const source = '短いメモです。\n\n- 項目\n';
+
+    const result = pageTitle(source, '/work/notes/meeting.md');
+
+    expect(result).toBe('meeting');
+  });
+
+  it('本文が空白だけの Markdown のとき、変換の対象外とすること', () => {
+    const source = '\n  \n\t\n';
+
+    const result = pageTitle(source, '/work/notes/empty.md');
+
+    expect(result).toBeUndefined();
+  });
+
+  it('先頭に見出しがある Markdown のとき、見出しの文をタイトルにすること', () => {
+    const source = '# 設計の方針\n\n本文です。\n';
+
+    const result = pageTitle(source, '/work/notes/design.md');
+
+    expect(result).toBe('設計の方針');
   });
 });
