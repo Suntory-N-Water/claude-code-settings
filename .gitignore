@@ -84,6 +84,7 @@ output-html/
 web-fetch/
 
 style-check/
+/textlint-check/
 
 .mikke/
 

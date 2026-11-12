@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
-import { dirname, extname, join, resolve } from 'node:path';
-import type { TextlintResult } from '@textlint/types';
+import { extname, resolve } from 'node:path';
 import { defineHook } from 'cc-hooks-ts';
+import { CODE_EXTENSIONS } from './textlint-check/lint.ts';
+import { recordFirstEdit } from './textlint-check/store.ts';
 
-const ROOT = dirname(dirname(import.meta.dir));
-const MAX_REPORTED_FINDINGS = 12;
+// textlint は 1 回の起動で約 380MB を使い、並列の編集ではその分だけ同時に起動する。
+// 編集のたびには編集前の本文を記録するだけにして、指摘は応答の終わりの textlint-edits-stop.ts がまとめて確かめる
 const IGNORED_PATH_SEGMENTS = [
   '/node_modules/',
   '/.git/',
@@ -13,31 +14,6 @@ const IGNORED_PATH_SEGMENTS = [
   '/tmp/',
   '/var/folders/',
 ];
-
-type TextlintFinding = Pick<
-  TextlintResult['messages'][number],
-  'ruleId' | 'message' | 'line' | 'column'
->;
-
-type Linter = {
-  lintText(text: string, filePath: string): Promise<TextlintResult>;
-};
-
-let linterPromise: Promise<Linter> | undefined;
-
-function loadLinter(): Promise<Linter> {
-  linterPromise ??= (async () => {
-    const { createLinter, loadTextlintrc } = await import('textlint');
-    const descriptor = await loadTextlintrc({
-      configFilePath: join(ROOT, '.textlintrc.json'),
-      node_modulesDir: join(ROOT, 'node_modules'),
-    });
-    return createLinter({ descriptor });
-  })();
-  return linterPromise;
-}
-
-const CODE_EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts']);
 
 function isTarget(filePath: string): boolean {
   const ext = extname(filePath).toLowerCase();
@@ -70,52 +46,6 @@ export function applyEdit(
   return `${source.slice(0, first)}${newString}${source.slice(first + oldString.length)}`;
 }
 
-function findingKey(finding: TextlintFinding): string {
-  return `${finding.ruleId}\0${finding.message}`;
-}
-
-export function introducedFindings(
-  before: readonly TextlintFinding[],
-  after: readonly TextlintFinding[],
-): TextlintFinding[] {
-  const remaining = new Map<string, number>();
-  for (const finding of before) {
-    const key = findingKey(finding);
-    remaining.set(key, (remaining.get(key) ?? 0) + 1);
-  }
-
-  const introduced: TextlintFinding[] = [];
-  for (const finding of after) {
-    const key = findingKey(finding);
-    const count = remaining.get(key) ?? 0;
-    if (count > 0) {
-      remaining.set(key, count - 1);
-    } else {
-      introduced.push(finding);
-    }
-  }
-  return introduced;
-}
-
-function formatReport(filePath: string, findings: TextlintFinding[]): string {
-  const details = findings
-    .slice(0, MAX_REPORTED_FINDINGS)
-    .map(({ line, column, ruleId, message }) => `- ${line}:${column} ${message} (${ruleId})`);
-  const omitted = findings.length - details.length;
-  if (omitted > 0) {
-    details.push(`- ほか ${omitted} 件`);
-  }
-  return [
-    `textlint が今回の編集で増えた指摘を ${findings.length} 件検出しました: ${filePath}`,
-    ...details,
-    '該当箇所を Edit で直してください。書き直しは不要です。',
-  ].join('\n');
-}
-
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 const hook = defineHook({
   trigger: {
     PostToolUse: {
@@ -132,51 +62,32 @@ const hook = defineHook({
     }
 
     try {
+      if ('content' in input) {
+        await recordFirstEdit(context.input.session_id, { filePath });
+        return context.success();
+      }
       const file = Bun.file(filePath);
       if (!(await file.exists())) {
         return context.success();
       }
-      const afterText = await file.text();
-
-      // Write は全文を書き出すので、残っている指摘はすべて今回の出力に属する。
-      // Edit は書き込み後の本文から逆向きに置換して編集前を復元し、差分だけを見る。
-      let beforeText: string | undefined;
-      if (!('content' in input)) {
-        beforeText = applyEdit(afterText, input.new_string, input.old_string, input.replace_all);
-        if (beforeText === undefined) {
-          // 復元できない置換は差分を判定できないため、誤検出を避けて何もしない。
-          return context.success();
-        }
-      }
-
-      // textlint は JS/TS を読むプラグインを持たず、拡張子のまま渡すと例外になる。
-      // 辞書の語は日本語なので、プレーンテキストとして読ませてもコード部分は誤検出しない
-      const lintPath = CODE_EXTENSIONS.has(extname(filePath).toLowerCase())
-        ? `${filePath}.txt`
-        : filePath;
-      const linter = await loadLinter();
-      const beforeFindings =
-        beforeText === undefined ? [] : (await linter.lintText(beforeText, lintPath)).messages;
-      const afterFindings = (await linter.lintText(afterText, lintPath)).messages;
-      const introduced = introducedFindings(beforeFindings, afterFindings);
-
-      if (introduced.length === 0) {
+      // Edit は書き込み後の本文から逆向きに置換して編集前を復元する
+      const before = applyEdit(
+        await file.text(),
+        input.new_string,
+        input.old_string,
+        input.replace_all,
+      );
+      if (before === undefined) {
+        // 復元できない置換は差分を判定できないため、誤検出を避けて記録しない
         return context.success();
       }
-
-      return context.json({
-        event: 'PostToolUse',
-        output: {
-          hookSpecificOutput: {
-            hookEventName: 'PostToolUse',
-            additionalContext: formatReport(filePath, introduced),
-          },
-        },
-      });
+      await recordFirstEdit(context.input.session_id, { filePath, before });
+      return context.success();
     } catch (error) {
-      const detail = errorText(error);
-      process.stderr.write(`[textlint-post-tool-use] ${detail}\n`);
-      return context.nonBlockingError(`textlint を実行できませんでした: ${detail}`);
+      process.stderr.write(
+        `[textlint-post-tool-use] ${error instanceof Error ? error.message : String(error)}\n`,
+      );
+      return context.success();
     }
   },
 });

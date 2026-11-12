@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { applyEdit, introducedFindings } from './textlint-post-tool-use.ts';
+import { introducedFindings } from './textlint-check/lint.ts';
+import { applyEdit } from './textlint-post-tool-use.ts';
 
 const SCRIPT = join(import.meta.dir, 'textlint-post-tool-use.ts');
 const SESSION_ID = 'textlint-post-tool-use-test';
@@ -21,6 +22,7 @@ async function runHook(input: unknown): Promise<{
   stdout: string;
 }> {
   const proc = Bun.spawn(['bun', 'run', SCRIPT], {
+    env: { ...process.env, TEXTLINT_CHECK_STORE_ROOT: join(workspace, 'store') },
     stdin: new TextEncoder().encode(JSON.stringify(input)),
     stdout: 'pipe',
     stderr: 'pipe',
@@ -47,60 +49,20 @@ function postToolInput(
 }
 
 describe('textlint PostToolUse hook', () => {
-  test('Write 後に指摘が残っていれば追加コンテキストで知らせる', async () => {
-    const filePath = join(workspace, 'new.md');
+  test('Write・Edit の後、Claude に何も返さないこと', async () => {
+    const written = join(workspace, 'new.md');
     const content = 'この機能を処理の入口として使います。\n';
-    await writeFile(filePath, content);
-    const { exitCode, stdout } = await runHook(postToolInput('Write', filePath, { content }));
+    await writeFile(written, content);
+    const edited = join(workspace, 'existing.md');
+    await writeFile(edited, '処理の入口を入口として使います。\n');
 
-    expect(exitCode).toBe(0);
-    expect(JSON.parse(stdout)).toMatchObject({
-      hookSpecificOutput: {
-        hookEventName: 'PostToolUse',
-        additionalContext: expect.stringContaining('入口'),
-      },
-    });
-  });
-
-  test('編集がツールを止めない', async () => {
-    const filePath = join(workspace, 'new.md');
-    const content = 'この機能を処理の入口として使います。\n';
-    await writeFile(filePath, content);
-    const { stdout } = await runHook(postToolInput('Write', filePath, { content }));
-
-    expect(stdout).not.toContain('permissionDecision');
-  });
-
-  test('Edit で既存の指摘数が増えなければ何も返さない', async () => {
-    const filePath = join(workspace, 'existing.md');
-    await writeFile(filePath, '処理の入口を用意します。\n');
-    const { exitCode, stdout } = await runHook(
-      postToolInput('Edit', filePath, {
-        old_string: '追加します',
-        new_string: '用意します',
-      }),
+    const write = await runHook(postToolInput('Write', written, { content }));
+    const edit = await runHook(
+      postToolInput('Edit', edited, { old_string: '追加します', new_string: '入口として使います' }),
     );
 
-    expect(exitCode).toBe(0);
-    expect(stdout).not.toContain('additionalContext');
-  });
-
-  test('Edit で同じ指摘を増やせば知らせる', async () => {
-    const filePath = join(workspace, 'existing.md');
-    await writeFile(filePath, '処理の入口を入口として使います。\n');
-    const { exitCode, stdout } = await runHook(
-      postToolInput('Edit', filePath, {
-        old_string: '追加します',
-        new_string: '入口として使います',
-      }),
-    );
-
-    expect(exitCode).toBe(0);
-    expect(JSON.parse(stdout)).toMatchObject({
-      hookSpecificOutput: {
-        additionalContext: expect.stringContaining('入口'),
-      },
-    });
+    expect(write).toEqual({ exitCode: 0, stdout: '' });
+    expect(edit).toEqual({ exitCode: 0, stdout: '' });
   });
 });
 
