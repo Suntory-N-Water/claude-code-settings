@@ -1,326 +1,330 @@
 {
-	"$schema": "https://json.schemastore.org/claude-code-settings.json",
-	"cleanupPeriodDays": 90,
-	"syncClaudeAiSkills": false,
-	"syncClaudeAiPlugins": false,
-	"env": {
-		"CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
-		"CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
-		"CLAUDE_CODE_NEW_INIT": "1",
-		"CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL": "1",
-		"ENABLE_CLAUDEAI_MCP_SERVERS": "false",
-		"CLAUDE_CODE_AUTO_CONNECT_IDE": "false",
-		"CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
-		"CLAUDE_CODE_DISABLE_ARTIFACT": "1",
-		"CLAUDE_AFK_TIMEOUT_MS": "86400000",
-		"DISABLE_COST_WARNINGS": "1",
-		"CLAUDE_CODE_DISABLE_CFC_PROMPT": "1",
-		"CLAUDE_CODE_DISABLE_CRON": "1",
-		"CLAUDE_CODE_DISABLE_ADVISOR_TOOL": "1",
-		"CLAUDE_CODE_GLOB_NO_IGNORE": "false",
-		"CLAUDE_CODE_WEBFETCH_CACHE_TTL_MS": "3600000",
-		"CLAUDE_CODE_WEB_FETCH_AGENT": "0",
-		"CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH": "1024",
-		"DISABLE_BUG_COMMAND": "1",
-		"DISABLE_DOCTOR_COMMAND": "1",
-		"DISABLE_UPGRADE_COMMAND": "1",
-		"DISABLE_EXTRA_USAGE_COMMAND": "1",
-		"CLAUDE_CODE_THRIFTY_SONIC": "false"
-	},
-	"attribution": {
-		"sessionUrl": false
-	},
-	"permissions": {
-		"deny": [
-			"Bash(git config --global credential.:*)",
-			"Bash(gh auth setup-git:*)",
-			"Bash(rm -rf:*)"
-		],
-		"defaultMode": "auto"
-	},
-	"model": "opus",
-	"disableClaudeAiConnectors": true,
-	"skillOverrides": {
-		"dataviz": "off",
-		"artifact-capabilities": "off",
-		"artifact-diagramming": "off",
-		"artifact-design": "off",
-		"claude-api": "off",
-		"deep-research": "off",
-		"schedule": "off",
-		"run": "off",
-		"loop": "off",
-		"verify": "off",
-		"keybindings-help": "off",
-		"fewer-permission-prompts": "off",
-		"init": "off",
-		"claude-in-chrome": "off",
-		"update-config": "off"
-	},
-	"hooks": {
-		"SessionStart": [
-			{
-				"matcher": "clear|compact",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
-					}
-				]
-			},
-			{
-				"matcher": "*",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "sh ~/.claude/hooks/herdr-agent-state.sh session",
-						"timeout": 10
-					}
-				]
-			}
-		],
-		"UserPromptSubmit": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
-					},
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/inject-comments.ts"
-					},
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/herdr-pane-status.ts",
-						"async": true
-					}
-				]
-			}
-		],
-		"PostToolUse": [
-			{
-				"matcher": "Write|Edit",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/md-to-html.ts"
-					},
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-post-tool-use.ts"
-					}
-				]
-			},
-			{
-				"matcher": "Bash",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/md-to-html.ts"
-					}
-				]
-			}
-		],
-		"PreToolUse": [
-			{
-				"matcher": "mcp__.*__wrap_up",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/japanese-guard.ts"
-					}
-				]
-			},
-			{
-				"matcher": "Bash",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "rtk hook claude"
-					},
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-git-message.ts"
-					}
-				]
-			},
-			{
-				"matcher": "AskUserQuestion",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/notify-input-needed.ts"
-					}
-				]
-			},
-			{
-				"matcher": "Edit|Write",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/tdd-skill-guard.ts"
-					}
-				]
-			},
-			{
-				"matcher": "WebFetch",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/web-fetch-advice.ts"
-					}
-				]
-			}
-		],
-		"PermissionRequest": [
-			{
-				"matcher": "*",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/notify-input-needed.ts"
-					}
-				]
-			}
-		],
-		"Stop": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/notify-turn-end.ts",
-						"async": true
-					}
-				]
-			},
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
-					}
-				]
-			},
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/japanese-guard.ts"
-					}
-				]
-			},
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-edits-stop.ts"
-					}
-				]
-			}
-		],
-		"SubagentStart": [
-			{
-				"matcher": "Explore|general-purpose",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/subagent-research-context.ts"
-					}
-				]
-			}
-		],
-		"SubagentStop": [
-			{
-				"matcher": "Explore|general-purpose",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bun run -i --silent ~/.claude/scripts/typescript/subagent-archive.ts"
-					}
-				]
-			}
-		]
-	},
-	"workflowKeywordTriggerEnabled": false,
-	"statusLine": {
-		"type": "command",
-		"command": "~/.claude/scripts/statusline.py"
-	},
-	"enabledPlugins": {
-		"general-dev-skills@suntory-n-water-marketplace": true,
-		"mattpocock-skills@claude-plugins-official": true,
-		"general-dev-mods@suntory-n-water-marketplace": true,
-		"plugin-authoring@builtin": false
-	},
-	"extraKnownMarketplaces": {
-		"suntory-n-water-marketplace": {
-			"source": {
-				"source": "github",
-				"repo": "Suntory-N-Water/suntory-n-water-marketplace"
-			}
-		},
-		"claude-plugins-official": {
-			"source": {
-				"source": "github",
-				"repo": "anthropics/claude-plugins-official"
-			}
-		}
-	},
-	"outputStyle": "sui-style",
-	"language": "日本語",
-	"feedbackSurveyRate": 0,
-	"feedbackDrafts": "off",
-	"spinnerTipsEnabled": false,
-	"promptCacheTtl": "1h",
-	"subagentPromptCacheTtl": "1h",
-	"effortLevel": "high",
-	"modelSettings": {
-		"claude-opus-5": {
-			"effortLevel": "high"
-		},
-		"claude-fable-5-1": {
-			"effortLevel": "medium"
-		},
-		"claude-opus-5-5": {
-			"effortLevel": "medium",
-			"autoCompactWindow": 300000
-		},
-		"claude-sonnet-5-5": {
-			"effortLevel": "high"
-		},
-		"claude-haiku-5-5": {
-			"autoCompactWindow": 100000
-		}
-	},
-	"promptSuggestionEnabled": false,
-	"emojiCompletionEnabled": false,
-	"awaySummaryEnabled": false,
-	"showClearContextOnPlanAccept": true,
-	"pluginConfigs": {
-		"agents-md@builtin": {
-			"options": {
-				"instructionFiles": "claude-md-or-agents-md"
-			}
-		}
-	},
-	"plansDirectory": ".claude/plans",
-	"tui": "fullscreen",
-	"timeFormat": "24-hour",
-	"timeZone": "Asia/Tokyo",
-	"skipDangerousModePermissionPrompt": true,
-	"skipWorkflowUsageWarning": true,
-	"theme": "dark",
-	"autoCompactEnabled": true,
-	"idleCompaction": false,
-	"switchModelsOnFlag": false,
-	"showTurnDuration": false,
-	"remoteControlAtStartup": false,
-	"agentPushNotifEnabled": true,
-	"skipAutoPermissionPrompt": true,
-	"useAutoModeDuringPlan": true,
-	"autoMode": {
-		"environment": ["$defaults"]
-	},
-	"leftArrowOpensAgents": false
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "cleanupPeriodDays": 90,
+  "syncClaudeAiSkills": false,
+  "syncClaudeAiPlugins": false,
+  "env": {
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
+    "CLAUDE_CODE_NEW_INIT": "1",
+    "CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL": "1",
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false",
+    "CLAUDE_CODE_AUTO_CONNECT_IDE": "false",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
+    "CLAUDE_CODE_DISABLE_ARTIFACT": "1",
+    "CLAUDE_AFK_TIMEOUT_MS": "86400000",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "DISABLE_COST_WARNINGS": "1",
+    "CLAUDE_CODE_DISABLE_CFC_PROMPT": "1",
+    "CLAUDE_CODE_DISABLE_CRON": "1",
+    "CLAUDE_CODE_DISABLE_ADVISOR_TOOL": "1",
+    "CLAUDE_CODE_GLOB_NO_IGNORE": "false",
+    "CLAUDE_CODE_WEBFETCH_CACHE_TTL_MS": "3600000",
+    "CLAUDE_CODE_WEB_FETCH_AGENT": "0",
+    "CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH": "1024",
+    "DISABLE_BUG_COMMAND": "1",
+    "DISABLE_DOCTOR_COMMAND": "1",
+    "DISABLE_UPGRADE_COMMAND": "1",
+    "DISABLE_EXTRA_USAGE_COMMAND": "1",
+    "CLAUDE_CODE_THRIFTY_SONIC": "false"
+  },
+  "attribution": {
+    "sessionUrl": false
+  },
+  "permissions": {
+    "deny": [
+      "Bash(git config --global credential.:*)",
+      "Bash(gh auth setup-git:*)",
+      "Bash(rm -rf:*)"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "opus",
+  "disableClaudeAiConnectors": true,
+  "skillOverrides": {
+    "dataviz": "off",
+    "artifact-capabilities": "off",
+    "artifact-diagramming": "off",
+    "artifact-design": "off",
+    "claude-api": "off",
+    "deep-research": "off",
+    "schedule": "off",
+    "run": "off",
+    "loop": "off",
+    "verify": "off",
+    "keybindings-help": "off",
+    "fewer-permission-prompts": "off",
+    "init": "off",
+    "claude-in-chrome": "off",
+    "update-config": "off"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh ~/.claude/hooks/herdr-agent-state.sh session",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/inject-comments.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/herdr-pane-status.ts",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/md-to-html.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-post-tool-use.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/md-to-html.ts"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*__wrap_up",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/japanese-guard.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          },
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-git-message.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/notify-input-needed.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/tdd-skill-guard.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/web-fetch-advice.ts"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/notify-input-needed.ts"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/notify-turn-end.ts",
+            "async": true
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/cache-ttl-guard.ts"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/japanese-guard.ts"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-edits-stop.ts"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "Explore|general-purpose",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/subagent-research-context.ts"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "Explore|general-purpose",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run -i --silent ~/.claude/scripts/typescript/subagent-archive.ts"
+          }
+        ]
+      }
+    ]
+  },
+  "workflowKeywordTriggerEnabled": false,
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/scripts/statusline.py"
+  },
+  "enabledPlugins": {
+    "general-dev-skills@suntory-n-water-marketplace": true,
+    "mattpocock-skills@claude-plugins-official": true,
+    "general-dev-mods@suntory-n-water-marketplace": true,
+    "plugin-authoring@builtin": false,
+    "visual-html@suntory-n-water-marketplace": true
+  },
+  "extraKnownMarketplaces": {
+    "suntory-n-water-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "Suntory-N-Water/suntory-n-water-marketplace"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
+  "outputStyle": "sui-style",
+  "language": "日本語",
+  "feedbackSurveyRate": 0,
+  "feedbackDrafts": "off",
+  "spinnerTipsEnabled": false,
+  "promptCacheTtl": "1h",
+  "subagentPromptCacheTtl": "1h",
+  "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "high"
+    },
+    "claude-fable-5-1": {
+      "effortLevel": "medium"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "medium",
+      "autoCompactWindow": 300000
+    },
+    "claude-sonnet-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-haiku-5-5": {
+      "autoCompactWindow": 100000
+    }
+  },
+  "promptSuggestionEnabled": false,
+  "emojiCompletionEnabled": false,
+  "awaySummaryEnabled": false,
+  "showClearContextOnPlanAccept": true,
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-or-agents-md"
+      }
+    }
+  },
+  "plansDirectory": ".claude/plans",
+  "tui": "fullscreen",
+  "timeFormat": "24-hour",
+  "timeZone": "Asia/Tokyo",
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark",
+  "autoCompactEnabled": true,
+  "idleCompaction": false,
+  "switchModelsOnFlag": false,
+  "showTurnDuration": false,
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "useAutoModeDuringPlan": true,
+  "autoMode": {
+    "environment": [
+      "$defaults"
+    ]
+  },
+  "leftArrowOpensAgents": false
 }

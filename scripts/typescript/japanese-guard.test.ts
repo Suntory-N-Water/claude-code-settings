@@ -20,7 +20,10 @@ afterAll(() => rmSync(tempDir, { recursive: true, force: true }));
 
 type Entry = Record<string, unknown>;
 
-const userPrompt = (text: string): Entry => ({ type: 'user', message: { role: 'user', content: text } });
+const userPrompt = (text: string): Entry => ({
+  type: 'user',
+  message: { role: 'user', content: text },
+});
 const assistantText = (text: string): Entry => ({
   type: 'assistant',
   message: { role: 'assistant', content: [{ type: 'text', text }] },
@@ -236,7 +239,11 @@ describe('複数の応答に分かれた最終回答', () => {
 describe('wrap_up に渡すまとめ文・質問文・ボタンの文言', () => {
   test('transcript の wrap_up 呼び出しのまとめ文が英語のとき、Stop hook が差し戻すこと', async () => {
     const { stdout } = await runStopWithTranscript(
-      [userPrompt('公開して'), toolUse(WRAP_UP, { recap: ENGLISH, ask: 'Should I publish it now?' }), toolResult()],
+      [
+        userPrompt('公開して'),
+        toolUse(WRAP_UP, { recap: ENGLISH, ask: 'Should I publish it now?' }),
+        toolResult(),
+      ],
       '（応答なし）',
     );
 
@@ -247,7 +254,10 @@ describe('wrap_up に渡すまとめ文・質問文・ボタンの文言', () =>
     ['まとめ文と質問文が英語', { recap: ENGLISH, ask: 'Should I publish it now?' }],
     [
       'ボタンの配列が JSON 文字列で、その中の文言が英語',
-      { recap: '公開の準備ができました。', actions: JSON.stringify([{ label: 'Go', message: ENGLISH }]) },
+      {
+        recap: '公開の準備ができました。',
+        actions: JSON.stringify([{ label: 'Go', message: ENGLISH }]),
+      },
     ],
   ])('PreToolUse で %s のとき、拒否すること', async (_, toolInput) => {
     const { stdout } = await runPreToolUse(toolInput);

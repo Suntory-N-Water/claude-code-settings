@@ -90,7 +90,9 @@ function wrapUpText(input: unknown): string {
   const labels = (Array.isArray(list) ? list : []).flatMap((action) =>
     action && typeof action === 'object' ? [action.label, action.message] : [],
   );
-  return [recap, ask, ...labels].filter((p): p is string => typeof p === 'string' && p !== '').join('\n');
+  return [recap, ask, ...labels]
+    .filter((p): p is string => typeof p === 'string' && p !== '')
+    .join('\n');
 }
 
 function head(text: string, label = ''): string {
@@ -109,7 +111,9 @@ function isUserTurn(entry: Entry): boolean {
   if (typeof entry.message?.content === 'string') {
     return true;
   }
-  return Array.isArray(entry.message?.content) && !blocks(entry).some((b) => b.type === 'tool_result');
+  return (
+    Array.isArray(entry.message?.content) && !blocks(entry).some((b) => b.type === 'tool_result')
+  );
 }
 
 function readEntries(transcriptPath: string): Entry[] {
