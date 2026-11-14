@@ -204,4 +204,12 @@ describe('編集で壊れたコメントの提示', () => {
     expect(result).toContain('コメントA');
     expect(result).toContain('コメントB');
   });
+
+  it('アンカーを失ったコメントが 1 件あるとき、解決済みにするコマンドが案内されること', () => {
+    const entry = createEntry({ annotations: [createAnnotation({ id: 'a' })] });
+
+    const result = formatBrokenAnchors(entry);
+
+    expect(result).toContain('resolve-comment.ts');
+  });
 });

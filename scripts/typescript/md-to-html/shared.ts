@@ -131,6 +131,10 @@ export interface UnresolvedEntry {
 
 const QUOTE_LIMIT = 60;
 const RESOLVE_COMMAND = 'bun run --silent ~/.claude/scripts/typescript/resolve-comment.ts';
+const RESOLVE_GUIDE = [
+  `対応が完了したコメントは \`${RESOLVE_COMMAND} <id> [<id> ...]\` を実行して解決済みにしてください。複数の id をまとめて渡せます。resolved を付けるまで毎プロンプト再掲されます。`,
+  'コメントファイルを直接編集してはいけません。読み込みと書き戻しの間にブラウザからコメントが追加されると、その追加が消えます。削除もユーザーが行います。',
+];
 
 export interface UnresolvedReport {
   entries: UnresolvedEntry[];
@@ -190,12 +194,7 @@ export function formatUnresolvedComments(report: UnresolvedReport): string {
       });
     }
     lines.push('');
-    lines.push(
-      `対応が完了したコメントは \`${RESOLVE_COMMAND} <id> [<id> ...]\` を実行して解決済みにしてください。複数の id をまとめて渡せます。resolved を付けるまで毎プロンプト再掲されます。`,
-    );
-    lines.push(
-      'コメントファイルを直接編集してはいけません。読み込みと書き戻しの間にブラウザからコメントが追加されると、その追加が消えます。削除もユーザーが行います。',
-    );
+    lines.push(...RESOLVE_GUIDE);
     if (report.outOfScopeCount > 0) {
       lines.push(
         `なお現在の作業ディレクトリ外にも未対応コメントが ${report.outOfScopeCount} 件あります。該当プロジェクトで作業するときに提示されます。`,
@@ -208,13 +207,15 @@ export function formatUnresolvedComments(report: UnresolvedReport): string {
   return lines.join('\n');
 }
 
-// 編集によって位置を特定できなくなったコメントだけを知らせる。未対応コメントの
-// 全文は UserPromptSubmit 側が毎プロンプト注入するので、ここでは繰り返さない
+// 編集によって位置を特定できなくなったコメントだけを知らせる。未対応コメントの全文は UserPromptSubmit 側が注入する。
+// 解決済みにする案内はここにも付ける。UserPromptSubmit 側の注入が届かなかったセッションでは、エージェントはこの警告でしかコメントを知らない。
 export function formatBrokenAnchors(entry: UnresolvedEntry): string {
   const lines = [`⚠ この編集でコメントのアンカーが壊れました (${entry.annotations.length} 件)`];
   entry.annotations.forEach((annotation, index) => {
     lines.push(...formatAnnotation(entry, annotation, index + 1));
   });
+  lines.push('');
+  lines.push(...RESOLVE_GUIDE);
   return lines.join('\n');
 }
 

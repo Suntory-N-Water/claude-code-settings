@@ -137,6 +137,43 @@ describe('注入対象の収集', () => {
     expect(report.entries).toEqual([]);
   });
 
+  it('対象 Markdown が OS の一時ディレクトリにあるとき、作業ディレクトリの外でも注入対象に入ること', async () => {
+    const tmpSource = await mkdtemp(join(tmpdir(), 'inject-comments-tmp-source-'));
+    try {
+      const sourcePath = await writeSourceMarkdown(tmpSource, 'handoff.md');
+      const annotation = createAnnotation({ id: 'tmp-1' });
+      await writeComments(
+        root,
+        'handoff.comments.json',
+        createComments({ sourcePath, annotations: [annotation] }),
+      );
+
+      const report = await collect('/nonexistent/project', new Set(), root);
+
+      expect(report.entries.map((entry) => entry.annotations)).toEqual([[annotation]]);
+      expect(report.outOfScopeCount).toBe(0);
+    } finally {
+      await rm(tmpSource, { recursive: true, force: true });
+    }
+  });
+
+  it('対象 Markdown が一時ディレクトリでもない別プロジェクトにあるとき、範囲外の件数に数えられること', async () => {
+    const annotation = createAnnotation({ id: 'other-project-1' });
+    await writeComments(
+      root,
+      'other.comments.json',
+      createComments({
+        sourcePath: '/nonexistent/other-project/doc.md',
+        annotations: [annotation],
+      }),
+    );
+
+    const report = await collect(cwd, new Set(), root);
+
+    expect(report.entries).toEqual([]);
+    expect(report.outOfScopeCount).toBe(1);
+  });
+
   it('コメントファイルが 1 つ壊れていても、他のファイルのコメントが集まること', async () => {
     await writeBrokenComments(root, 'broken.comments.json');
     const sourcePath = await writeSourceMarkdown(cwd, 'doc.md');

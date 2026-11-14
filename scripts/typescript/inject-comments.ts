@@ -1,4 +1,5 @@
 #!/usr/bin/env -S bun run --silent
+import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { defineHook, runHook } from 'cc-hooks-ts';
 import { advanceBaselines } from './md-to-html/baseline.ts';
@@ -38,7 +39,11 @@ export async function collect(
       }
       // sourcePath は変換のたびに保存されるので、無いものは対象を追えない古い残骸
       const sourcePath = comments.sourcePath;
-      if (sourcePath === undefined || !isUnder(cwd, sourcePath)) {
+      // 一時ディレクトリはどのプロジェクトにも属さないので、作業ディレクトリで絞ると引き継ぎ書などのコメントがどのセッションにも届かない
+      if (
+        sourcePath === undefined ||
+        !(isUnder(cwd, sourcePath) || isUnder(tmpdir(), sourcePath))
+      ) {
         report.outOfScopeCount += unresolved.length;
         continue;
       }
