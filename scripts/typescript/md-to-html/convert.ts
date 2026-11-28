@@ -77,11 +77,12 @@ async function embedLocalImages(html: string, baseDir: string): Promise<string> 
   return result + html.slice(cursor);
 }
 
-// 列の多い表や長い英単語を含む表が本文幅を超えたとき、ページ全体ではなく表だけを
-// 横スクロールさせるために包む。micromark は生の HTML をエスケープするため、
-// ここに現れる <table> は GFM の表だけ
+// 列の多い表や長い英単語を含む表が本文幅を超えたとき、ページ全体ではなく表だけを横スクロールさせるために包む。
+// 表のセルに <img> を書いて商品画像を並べる使い方があるため、生の HTML をエスケープせずに通す。
+// 変換対象は手元で書いた Markdown だけなので、<script> も通る危険は受け入れている。
 function renderMarkdown(body: string): string {
   return micromark(body, {
+    allowDangerousHtml: true,
     extensions: [gfm()],
     htmlExtensions: [gfmHtml()],
   })
