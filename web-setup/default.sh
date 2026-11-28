@@ -26,25 +26,17 @@ EOF
   claude plugin marketplace add Suntory-N-Water/suntory-n-water-marketplace || true
   claude plugin marketplace add anthropics/claude-plugins-official || true
   claude plugin install -y general-dev-skills@suntory-n-water-marketplace || true
-  claude plugin install -y general-dev-mods@suntory-n-water-marketplace || true
   claude plugin install -y visual-html@suntory-n-water-marketplace || true
   claude plugin install -y mattpocock-skills@claude-plugins-official || true
 ) &
 
-# 手元では npx skills で ~/.agents/skills に入れており設定リポジトリに含まれないため、取得元から直接置く
 (
-  mkdir -p "$HOME/.claude/skills"
-  for repo in vercel-labs/agent-browser MaryCache/imozuru nanaism/yomiyasu; do
-    name="${repo#*/}"
-    git clone --depth 1 "https://github.com/$repo.git" "/tmp/skill-$name" || continue
-    rm -rf "$HOME/.claude/skills/$name"
-    cp -a "/tmp/skill-$name/skills/$name" "$HOME/.claude/skills/$name" || true
-  done
+  npx -y skills add vercel-labs/agent-browser -g -a claude-code -y || true
+  npx -y skills add MaryCache/imozuru -g -a claude-code -y || true
+  npx -y skills add nanaism/yomiyasu -g -a claude-code -y || true
 ) &
 
-(
-  npm install -g agent-browser && agent-browser install
-) &
+npm install -g agent-browser &
 
 wait
 exit 0
