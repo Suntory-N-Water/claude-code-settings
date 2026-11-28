@@ -210,14 +210,6 @@
             "command": "bun run -i --silent ~/.claude/scripts/typescript/japanese-guard.ts"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run -i --silent ~/.claude/scripts/typescript/textlint-edits-stop.ts"
-          }
-        ]
       }
     ],
     "SubagentStart": [
