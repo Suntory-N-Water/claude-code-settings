@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.9/schema.json",
   "vcs": {
     "enabled": false,
     "clientKind": "git",
@@ -21,23 +21,21 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "security": {
         "noDangerouslySetInnerHtml": "off"
       },
       "suspicious": {
         "noExplicitAny": "error",
         "noImplicitAnyLet": "error",
-        "noEvolvingTypes": "error"
+        "noEvolvingTypes": "error",
+        "noUnnecessaryConditions": "error"
       },
       "style": {
         "noParameterAssign": "error",
         "useConsistentArrayType": "error",
         "useArrayLiterals": "error",
         "useBlockStatements": "error"
-      },
-      "nursery": {
-        "noUnnecessaryConditions": "error"
       }
     },
     "includes": ["scripts/**/*.{js,jsx,ts,tsx}"]

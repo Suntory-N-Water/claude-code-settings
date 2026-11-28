@@ -75,11 +75,12 @@ describe('ai-words.json の辞書', () => {
     expect(found.some((message) => message.includes(`"${word}"`))).toBe(true);
   });
 
-  test.each(
-    missCases,
-  )('「%s」のように別の意味で使ったとき、「%s」の指摘が出ないこと', async (text, word) => {
-    const found = await messages(text);
+  test.each(missCases)(
+    '「%s」のように別の意味で使ったとき、「%s」の指摘が出ないこと',
+    async (text, word) => {
+      const found = await messages(text);
 
-    expect(found.filter((message) => message.includes(`"${word}"`))).toEqual([]);
-  });
+      expect(found.filter((message) => message.includes(`"${word}"`))).toEqual([]);
+    },
+  );
 });

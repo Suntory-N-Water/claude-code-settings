@@ -136,21 +136,23 @@ const missCases: [WordRuleId, string][] = [
 ];
 
 describe('語のルール', () => {
-  test.each(
-    hitRows,
-  )('%s の語を地の文に書いた時、検出されること', async (ruleId, sentence, matched) => {
-    const violations = await check(sentence);
+  test.each(hitRows)(
+    '%s の語を地の文に書いた時、検出されること',
+    async (ruleId, sentence, matched) => {
+      const violations = await check(sentence);
 
-    expect(ofRule(violations, ruleId)[0]?.matched).toBe(matched);
-  });
+      expect(ofRule(violations, ruleId)[0]?.matched).toBe(matched);
+    },
+  );
 
-  test.each(
-    missCases,
-  )('%s の除外に当たる語を書いた時、検出されないこと', async (ruleId, sentence) => {
-    const violations = await check(sentence);
+  test.each(missCases)(
+    '%s の除外に当たる語を書いた時、検出されないこと',
+    async (ruleId, sentence) => {
+      const violations = await check(sentence);
 
-    expect(ofRule(violations, ruleId)).toEqual([]);
-  });
+      expect(ofRule(violations, ruleId)).toEqual([]);
+    },
+  );
 
   test('コーパス校正で対象から外した語は検出されないこと', async () => {
     const violations = await check('まさにその通りである。');

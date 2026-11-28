@@ -137,7 +137,7 @@ function extractPromptText(entries: SDKMessage[]): string | undefined {
     }
     const texts: string[] = [];
     for (const block of content) {
-      if (block.type === 'text' && block.text?.trim()) {
+      if (block.type === 'text' && block.text.trim()) {
         texts.push(block.text);
       }
     }

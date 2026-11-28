@@ -62,20 +62,23 @@ describe('PDF の行を Markdown に変換する', () => {
       ['次の行がカタカナの項目記号で始まる', {}, {}, 'ア 次の項目'],
       ['次の行が括弧付きの番号で始まる', {}, {}, '（１）次の項目'],
       ['次の行が中黒で始まる', {}, {}, '・次の項目'],
-    ])('%s とき、新しい段落になること', (_, prevOverrides: Partial<PdfLine>, nextOverrides: Partial<PdfLine>, nextText) => {
-      // Arrange
-      const sut = pdfLinesToMarkdown;
-      const lines = [
-        line('前の段落', { top: 100, ...prevOverrides }),
-        line(nextText, { top: 120, ...nextOverrides }),
-      ];
+    ])(
+      '%s とき、新しい段落になること',
+      (_, prevOverrides: Partial<PdfLine>, nextOverrides: Partial<PdfLine>, nextText) => {
+        // Arrange
+        const sut = pdfLinesToMarkdown;
+        const lines = [
+          line('前の段落', { top: 100, ...prevOverrides }),
+          line(nextText, { top: 120, ...nextOverrides }),
+        ];
 
-      // Act
-      const result = sut(lines);
+        // Act
+        const result = sut(lines);
 
-      // Assert
-      expect(result).toBe(`前の段落\n\n${nextText}`);
-    });
+        // Assert
+        expect(result).toBe(`前の段落\n\n${nextText}`);
+      },
+    );
   });
 
   describe('左右を狭めた段落', () => {
@@ -156,25 +159,23 @@ describe('PDF の行を Markdown に変換する', () => {
       );
     });
 
-    it.each([
-      ['(１)'],
-      ['- 3 -'],
-      ['<12>'],
-      ['ii'],
-    ])('ページ番号 %s は、1 ページにしか出てこなくても除かれること', (pageNumber) => {
-      // Arrange
-      const sut = pdfLinesToMarkdown;
-      const lines = [
-        line('本文', { top: 100, right: 150 }),
-        line(pageNumber, { top: 780, right: 80 }),
-      ];
+    it.each([['(１)'], ['- 3 -'], ['<12>'], ['ii']])(
+      'ページ番号 %s は、1 ページにしか出てこなくても除かれること',
+      (pageNumber) => {
+        // Arrange
+        const sut = pdfLinesToMarkdown;
+        const lines = [
+          line('本文', { top: 100, right: 150 }),
+          line(pageNumber, { top: 780, right: 80 }),
+        ];
 
-      // Act
-      const result = sut(lines);
+        // Act
+        const result = sut(lines);
 
-      // Assert
-      expect(result).toBe('本文');
-    });
+        // Assert
+        expect(result).toBe('本文');
+      },
+    );
   });
 
   describe('振り仮名と同じ高さの行', () => {

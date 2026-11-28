@@ -50,19 +50,19 @@ describe('差し戻す文', () => {
     });
   });
 
-  test.each([
-    '確認はしていません。',
-    '確認もしていません。',
-  ])('名詞と「している」の間に助詞が入った不実施の報告(%s)のとき、差し戻すこと', async (sentence) => {
-    const result = await runHook({
-      lastAssistantMessage: `設定を修正しました。\n${sentence}`,
-    });
+  test.each(['確認はしていません。', '確認もしていません。'])(
+    '名詞と「している」の間に助詞が入った不実施の報告(%s)のとき、差し戻すこと',
+    async (sentence) => {
+      const result = await runHook({
+        lastAssistantMessage: `設定を修正しました。\n${sentence}`,
+      });
 
-    expect(result).toMatchObject({
-      decision: 'block',
-      reason: expect.stringContaining(`- ${sentence}`),
-    });
-  });
+      expect(result).toMatchObject({
+        decision: 'block',
+        reason: expect.stringContaining(`- ${sentence}`),
+      });
+    },
+  );
 
   test('次の作業を宣言して終えたとき、差し戻すこと', async () => {
     const result = await runHook({
@@ -155,13 +155,16 @@ describe('commit の報告', () => {
     'previous の結果を見て直して',
     'Gemini Enterprise の資料を読んで',
     'docs/progress.md に記録して',
-  ])('依頼文の単語の一部にだけ PR が含まれるとき(%s)、コミットしていないという報告を差し戻さないこと', async (prompt) => {
-    const transcriptPath = await withTranscript(prompt);
+  ])(
+    '依頼文の単語の一部にだけ PR が含まれるとき(%s)、コミットしていないという報告を差し戻さないこと',
+    async (prompt) => {
+      const transcriptPath = await withTranscript(prompt);
 
-    const result = await runHook({ lastAssistantMessage: REPORT, transcriptPath });
+      const result = await runHook({ lastAssistantMessage: REPORT, transcriptPath });
 
-    expect(result).toEqual({});
-  });
+      expect(result).toEqual({});
+    },
+  );
 
   test('会話の圧縮後の要約にだけコミットの話があるとき、コミットしていないという報告を差し戻さないこと', async () => {
     const transcriptPath = await withTranscript('設定ファイルの typo を直して', [

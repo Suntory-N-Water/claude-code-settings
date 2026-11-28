@@ -32,6 +32,7 @@ export async function fetchDynamicHtml(url: string): Promise<string> {
     // 本文がそもそも少ないページもあるので、待機が成立しなくてもその時点の HTML を返す
     await page
       .waitForFunction(
+        // biome-ignore lint/performance/useDomNodeTextContent: textContent は script 要素の中身も数えるため、本文の描画前に文字数の条件を満たしてしまう
         (min) => (document.body?.innerText ?? '').trim().length >= min,
         MIN_BODY_TEXT_LENGTH,
         { timeout: RENDER_TIMEOUT },
